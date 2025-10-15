@@ -1,4 +1,3 @@
-export * from './TracedBlob';
-export * from './createHulls';
-export * from './Polygonizer';
-export * from './ImageTracer';
+export { ImageTracer, Hull, type ImageDataLike } from './ImageTracer';
+export { createHull } from './createHull';
+export type { Color, Point } from './types';
