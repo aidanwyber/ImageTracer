@@ -1,23 +1,25 @@
 {
 	"compilerOptions": {
-		"target": "ES2020",
+		"target": "ESNext",
 		"module": "ESNext",
-		"lib": ["ES2020", "DOM"],
+		"moduleResolution": "node",
+		"esModuleInterop": true,
+		"strict": true,
+		"allowJs": true,
+		"types": ["node", "vitest/globals"],
+		"skipLibCheck": true,
+
+		"allowSyntheticDefaultImports": true,
 		"declaration": true,
 		"declarationMap": true,
-		"sourceMap": true,
-		"outDir": "./dist",
-		"rootDir": ".",
-		"strict": true,
-		"esModuleInterop": true,
-		"skipLibCheck": true,
 		"forceConsistentCasingInFileNames": true,
-		"moduleResolution": "node",
+		"lib": ["ES2020", "DOM"],
+		"maxNodeModuleJsDepth": 0,
+		"outDir": "./dist",
 		"resolveJsonModule": true,
-		"allowSyntheticDefaultImports": true,
-		"types": ["jest", "node"],
-		"maxNodeModuleJsDepth": 0
+		"rootDir": ".",
+		"sourceMap": true
 	},
-	"include": ["src", "test"],
-	"exclude": ["node_modules", "dist"]
+	"exclude": ["node_modules", "dist"],
+	"include": ["src", "test"]
 }

@@ -1,7 +1,7 @@
-import { createHullPoints } from './createHull';
+// import { createHullPoints } from './createHull';
 import type { Color, Vec2 } from './types';
 import { Hull } from './Hull';
-import * as SVGJS from '@svgdotjs/svg.js';
+import { smoothedSVGPathData } from './smoothedSVGPathData';
 
 export interface ImageDataLike {
 	data: ArrayLike<number>;
@@ -14,8 +14,14 @@ export class ImageTracer {
 	readonly height: number;
 	readonly pixelGridSize: number;
 	readonly hulls: Hull[];
+	smoothingMinLength: number;
 
-	constructor(imageData: ImageDataLike, palette: Color[], pixelGridSize = 1) {
+	constructor(
+		imageData: ImageDataLike,
+		palette: Color[],
+		smoothingMinLength: number,
+		pixelGridSize = 1
+	) {
 		if (!imageData) {
 			throw new Error('imageData is required');
 		}
@@ -26,6 +32,7 @@ export class ImageTracer {
 
 		this.width = imageData.width;
 		this.height = imageData.height;
+		this.smoothingMinLength = smoothingMinLength;
 		this.pixelGridSize = Math.max(1, Math.floor(pixelGridSize));
 
 		this.hulls = palette.map(color =>
@@ -73,7 +80,7 @@ export class ImageTracer {
 		return points;
 	}
 
-	getSVGString(precision = 3): string {
+	getSVGString(precision = 3, doSmooth = true): string {
 		let svg = `<svg width="${this.width}" height="${this.height}" version="1.1" xmlns="http://www.w3.org/2000/svg" desc="Created with image-tracer">\n`;
 
 		const nf = (x: number) =>
@@ -83,11 +90,20 @@ export class ImageTracer {
 			const { r, g, b } = hull.color;
 			const p0 = hull.hullPoints[0];
 			let path = `<path fill="rgb(${r},${g},${b})" d="`;
-			path += `m ${nf(p0[0])} ${nf(p0[1])}`;
-			for (let point of hull.hullPoints.slice(1)) {
-				path += ` L ${point[0]} ${point[1]}`;
+			if (doSmooth) {
+				path += smoothedSVGPathData(
+					hull.hullPoints,
+					this.smoothingMinLength,
+					this.width,
+					this.height
+				);
+			} else {
+				path += `m ${nf(p0[0])} ${nf(p0[1])}`;
+				for (let point of hull.hullPoints.slice(1)) {
+					path += ` L ${point[0]} ${point[1]}`;
+				}
+				path += ' Z'; // close
 			}
-			path += ' Z'; // close
 			path += '" />\n';
 			svg += path;
 		}
