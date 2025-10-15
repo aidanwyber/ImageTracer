@@ -1,0 +1,69 @@
+{
+	"name": "image-tracer",
+	"version": "0.0.0",
+	"description": "Geometry and physics library for creative coding in JavaScript and TypeScript.",
+	"keywords": [
+		"geometry",
+		"physics",
+		"typescript",
+		"javascript",
+		"p5.js"
+	],
+	"homepage": "https://github.com/aidanwyber/Eidos#readme",
+	"bugs": {
+		"url": "https://github.com/aidanwyber/Eidos/issues"
+	},
+	"repository": {
+		"type": "git",
+		"url": "git+https://github.com/aidanwyber/Eidos.git"
+	},
+	"license": "MIT",
+	"author": "Aidan Wyber",
+	"type": "module",
+	"exports": {
+		".": {
+			"types": "./dist/index.d.ts",
+			"require": "./dist/index.js",
+			"import": "./dist/index.js"
+		},
+		"./physics": {
+			"types": "./dist/physics/index.d.ts",
+			"require": "./dist/physics/index.js",
+			"import": "./dist/physics/index.js"
+		},
+		"./geom": {
+			"types": "./dist/geom/index.d.ts",
+			"require": "./dist/geom/index.js",
+			"import": "./dist/geom/index.js"
+		},
+		"./math": {
+			"types": "./dist/math/index.d.ts",
+			"require": "./dist/math/index.js",
+			"import": "./dist/math/index.js"
+		},
+		"./gfx": {
+			"types": "./dist/gfx/index.d.ts",
+			"require": "./dist/gfx/index.js",
+			"import": "./dist/gfx/index.js"
+		}
+	},
+	"main": "./dist/index.js",
+	"types": "./dist/index.d.ts",
+	"files": [
+		"./dist"
+	],
+	"scripts": {
+		"build": "tsup src/index.ts --format cjs,esm --dts"
+	},
+	"dependencies": {
+		"@derschmale/tympanum": "^1.3.6",
+		"@svgdotjs/svg.js": "^3.2.5",
+		"p5": "^1.6.0"
+	},
+	"devDependencies": {
+		"@types/p5": "^1.7.6",
+		"tsup": "^8.5.0",
+		"typescript": "^5.9.3"
+	},
+	"module": "./dist/index.mjs"
+}
