@@ -1,6 +1,6 @@
 import type { Vec2 } from './types';
 
-function cross(o: Vec2, a: Vec2, b: Vec2): number {
+function cross2(o: Vec2, a: Vec2, b: Vec2): number {
 	return (a[0] - o[0]) * (b[1] - o[1]) - (a[1] - o[1]) * (b[0] - o[0]);
 }
 
@@ -8,12 +8,12 @@ function pointsEqual(a: Vec2, b: Vec2): boolean {
 	return a[0] === b[0] && a[1] === b[1];
 }
 
-export function createHull(points: Vec2[]): Vec2[] {
-	if (points.length <= 1) {
-		return points.slice();
+export function createHullPoints(pointCloud: Vec2[]): Vec2[] {
+	if (pointCloud.length <= 1) {
+		return pointCloud.slice();
 	}
 
-	const sorted = points
+	const sorted = pointCloud
 		.map(point => [point[0], point[1]] as Vec2)
 		.sort((a, b) => (a[0] === b[0] ? a[1] - b[1] : a[0] - b[0]));
 
@@ -32,7 +32,7 @@ export function createHull(points: Vec2[]): Vec2[] {
 	for (const point of unique) {
 		while (
 			lower.length >= 2 &&
-			cross(lower[lower.length - 2], lower[lower.length - 1], point) <= 0
+			cross2(lower[lower.length - 2], lower[lower.length - 1], point) <= 0
 		) {
 			lower.pop();
 		}
@@ -44,7 +44,7 @@ export function createHull(points: Vec2[]): Vec2[] {
 		const point = unique[i];
 		while (
 			upper.length >= 2 &&
-			cross(upper[upper.length - 2], upper[upper.length - 1], point) <= 0
+			cross2(upper[upper.length - 2], upper[upper.length - 1], point) <= 0
 		) {
 			upper.pop();
 		}
