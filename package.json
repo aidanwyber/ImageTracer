@@ -9,44 +9,17 @@
 		"javascript",
 		"p5.js"
 	],
-	"homepage": "https://github.com/aidanwyber/Eidos#readme",
+	"homepage": "https://github.com/aidanwyber/ImageTracer#readme",
 	"bugs": {
-		"url": "https://github.com/aidanwyber/Eidos/issues"
+		"url": "https://github.com/aidanwyber/ImageTracer/issues"
 	},
 	"repository": {
 		"type": "git",
-		"url": "git+https://github.com/aidanwyber/Eidos.git"
+		"url": "git+https://github.com/aidanwyber/ImageTracer.git"
 	},
 	"license": "MIT",
 	"author": "Aidan Wyber",
 	"type": "module",
-	"exports": {
-		".": {
-			"types": "./dist/index.d.ts",
-			"require": "./dist/index.js",
-			"import": "./dist/index.js"
-		},
-		"./physics": {
-			"types": "./dist/physics/index.d.ts",
-			"require": "./dist/physics/index.js",
-			"import": "./dist/physics/index.js"
-		},
-		"./geom": {
-			"types": "./dist/geom/index.d.ts",
-			"require": "./dist/geom/index.js",
-			"import": "./dist/geom/index.js"
-		},
-		"./math": {
-			"types": "./dist/math/index.d.ts",
-			"require": "./dist/math/index.js",
-			"import": "./dist/math/index.js"
-		},
-		"./gfx": {
-			"types": "./dist/gfx/index.d.ts",
-			"require": "./dist/gfx/index.js",
-			"import": "./dist/gfx/index.js"
-		}
-	},
 	"main": "./dist/index.js",
 	"types": "./dist/index.d.ts",
 	"files": [
