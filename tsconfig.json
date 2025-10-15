@@ -7,7 +7,7 @@
 		"declarationMap": true,
 		"sourceMap": true,
 		"outDir": "./dist",
-		"rootDir": "./src",
+		"rootDir": ".",
 		"strict": true,
 		"esModuleInterop": true,
 		"skipLibCheck": true,
@@ -15,10 +15,9 @@
 		"moduleResolution": "node",
 		"resolveJsonModule": true,
 		"allowSyntheticDefaultImports": true,
-
-		"types": [],
-		"maxNodeModuleJsDepth": 0 // <--- ADD THIS
+		"types": ["jest", "node"],
+		"maxNodeModuleJsDepth": 0
 	},
-	"include": ["src/**/*"],
+	"include": ["src", "test"],
 	"exclude": ["node_modules", "dist"]
 }

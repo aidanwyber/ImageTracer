@@ -1,56 +1,99 @@
-import p5 from 'p5';
-import { Polygonizer } from './Polygonizer';
-import { createHulls } from './createHulls';
-import type { Color, Point } from './types';
-import { Svg, SVG } from '@svgdotjs/svg.js';
+import { createHullPoints } from './createHull';
+import type { Color, Vec2 } from './types';
+import { Hull } from './Hull';
+import * as SVGJS from '@svgdotjs/svg.js';
 
-export class ImageTracer {
+export interface ImageDataLike {
+	data: ArrayLike<number>;
 	width: number;
 	height: number;
-
-	hulls: Hull[];
-	isDone = false;
-
-	constructor(
-		pixelArray: number[],
-		width: number,
-		height: number,
-		pixelGridSize: number = 1,
-		palette: Color[]
-	) {
-		this.width = width;
-		this.height = height;
-
-		this.hulls = [];
-
-		const sketch = new p5((sketch: p5) => {
-			sketch.setup = () => {
-				sketch.createCanvas(width, height);
-			};
-		});
-	}
-
-	downloadAsSvg(fileName: string) {
-		var draw = SVG('traceResult').size(this.width, this.height) as Svg;
-		draw.viewbox(0, 0, this.width, this.height);
-	}
-
-	private download(fileName: string, extension: string, text: string) {
-		const element = document.createElement('a');
-		element.setAttribute(
-			'href',
-			'data:text/plain;charset=utf-8,' + encodeURIComponent(text)
-		);
-		element.setAttribute('download', fileName + '.' + extension);
-		element.style.display = 'none';
-		document.body.appendChild(element);
-		element.click();
-		document.body.removeChild(element);
-	}
 }
 
-export class Hull {
-	points: Point[];
+export class ImageTracer {
+	readonly width: number;
+	readonly height: number;
+	readonly pixelGridSize: number;
+	readonly hulls: Hull[];
 
-	constructor(points: Point[]);
+	constructor(imageData: ImageDataLike, palette: Color[], pixelGridSize = 1) {
+		if (!imageData) {
+			throw new Error('imageData is required');
+		}
+
+		if (!palette?.length) {
+			throw new Error('palette must contain at least one colour');
+		}
+
+		this.width = imageData.width;
+		this.height = imageData.height;
+		this.pixelGridSize = Math.max(1, Math.floor(pixelGridSize));
+
+		this.hulls = palette.map(color =>
+			this.createHullForColor(imageData, color)
+		);
+	}
+
+	getHullByColor(color: Color): Hull | undefined {
+		return this.hulls.find(
+			hull =>
+				hull.color.r === color.r &&
+				hull.color.g === color.g &&
+				hull.color.b === color.b
+		);
+	}
+
+	createHullForColor(imageData: ImageDataLike, color: Color): Hull {
+		const maskPoints = this.createMaskPointCloud(imageData, color);
+		return new Hull(color, maskPoints);
+	}
+
+	createMaskPointCloud(imageData: ImageDataLike, color: Color): Vec2[] {
+		const { data } = imageData;
+		const stride = this.pixelGridSize;
+		const width = imageData.width;
+		const height = imageData.height;
+		const points: Vec2[] = [];
+
+		for (let y = 0; y < height; y += stride) {
+			for (let x = 0; x < width; x += stride) {
+				const index = (y * width + x) * 4;
+				const r = data[index];
+				const g = data[index + 1];
+				const b = data[index + 2];
+				const a = data[index + 3];
+
+				const matches =
+					a !== 0 && r === color.r && g === color.g && b === color.b;
+
+				if (matches) {
+					points.push([x, y]);
+				}
+			}
+		}
+		return points;
+	}
+
+	getSVGString(precision = 3): string {
+		let svg = `<svg width="${this.width}" height="${this.height}" version="1.1" xmlns="http://www.w3.org/2000/svg" desc="Created with image-tracer">\n`;
+
+		const nf = (x: number) =>
+			(Math.round(x * 10 ** precision) / 10 ** precision).toString();
+
+		for (let hull of this.hulls) {
+			const { r, g, b } = hull.color;
+			const p0 = hull.hullPoints[0];
+			let path = `<path fill="rgb(${r},${g},${b})" d="`;
+			path += `m ${nf(p0[0])} ${nf(p0[1])}`;
+			for (let point of hull.hullPoints.slice(1)) {
+				path += ` L ${point[0]} ${point[1]}`;
+			}
+			path += ' Z'; // close
+			path += '" />\n';
+			svg += path;
+		}
+
+		svg += `</svg>`;
+
+		return svg;
+	}
 }
