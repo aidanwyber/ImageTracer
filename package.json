@@ -1,6 +1,6 @@
 {
 	"name": "imagetrace",
-	"version": "1.0.0",
+	"version": "1.0.1",
 	"description": "Geometry and physics library for creative coding in JavaScript and TypeScript.",
 	"keywords": [
 		"geometry",

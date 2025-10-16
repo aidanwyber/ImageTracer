@@ -4,7 +4,7 @@ A simple TypeScript library for converting raster images to vector graphics, giv
 
 ![Version](https://img.shields.io/badge/version-1.0.0-blue.svg)
 ![License](https://img.shields.io/badge/license-MIT-green.svg)
-![TypeScript](https://img.shields.io/badge/TypeScript-5.0+-blue.svg)
+![TypeScript](https://img.shields.io/badge/TypeScript-5.9+-blue.svg)
 
 ## Features
 
@@ -25,24 +25,27 @@ npm install imagetrace
 ```typescript
 import { ImageTrace } from 'imagetrace';
 
-// Define your color palette
+// get image data from a canvas or blob
+const imageData = canvasContext.getImageData();
+
+// define the color palette for the shapes you want to trace
 const palette = [
-	{ r: 255, g: 0, b: 0 }, // rednpm.cmd buu
+	{ r: 255, g: 0, b: 0 }, // red
 	{ r: 0, g: 0, b: 255 }, // blue
 ];
 
-// Configure the tracer
+// configure the tracer
 const options = {
 	chaikinSmoothingSteps: 5,
 	smoothingMinLength: 5,
 	pixelGridStepSize: 1,
-	debugPointRadius: 0.5,
+	debugPointRadius: undefined,
 };
 
-// Create a new tracer instance
+// create a new tracer instance
 const tracer = new ImageTrace(imageData, palette, options);
 
-// Get SVG output
+// get SVG output
 const svg = tracer.getSVGString();
 ```
 
@@ -66,7 +69,7 @@ new ImageTrace(
 | --------------------- | ------ | --------- | ------------------------------------ |
 | smoothingMinLength    | number | -         | Minimum length for path smoothing    |
 | chaikinSmoothingSteps | number | -         | Number of smoothing iterations       |
-| pixelGridStepSize     | number | 1         | Pixel sampling interval              |
+| pixelGridStepSize     | number | 1         | Pixel point cloud sampling interval  |
 | debugPointRadius      | number | undefined | Radius for debug point visualization |
 
 ## Development
@@ -74,23 +77,16 @@ new ImageTrace(
 ### Prerequisites
 
 -   Node.js 14+
--   npm or yarn
+-   npmnode
 
 ### Setup
 
 ```bash
-# Clone the repository
-git clone https://github.com/aidanwyber/imagetrace.git
-
-# Install dependencies
-cd imagetrace
-npm install
-
-# Run tests
-npm test
+# install via npm
+npm install imagetrace
 ```
 
-### Building
+### Building a clone
 
 ```bash
 npm run build
@@ -109,18 +105,18 @@ npm test
 ```typescript
 import { ImageTrace } from 'imagetrace';
 
-// Load your image data
+// load your image data
 const canvas = document.createElement('canvas');
 const ctx = canvas.getContext('2d');
 const imageData = ctx.getImageData(0, 0, width, height);
 
-// Create tracer instance
-const tracer = new ImageTrace(imageData, [{ r: 255, g: 0, b: 0 }], {
+// create tracer instance for yellow shapes
+const tracer = new ImageTrace(imageData, [{ r: 255, g: 255, b: 0 }], {
 	smoothingMinLength: 5,
 	chaikinSmoothingSteps: 5,
 });
 
-// Get SVG output
+// get SVG output
 const svg = tracer.getSVGString();
 ```
 
@@ -135,7 +131,7 @@ This project builds upon several excellent works:
 
 ## Contributing
 
-Contributions are welcome! Please read our [Contributing Guide](CONTRIBUTING.md) for details on our code of conduct and the process for submitting pull requests.
+Contributions are welcome!
 
 1. Fork the Project
 2. Create your Feature Branch (`git checkout -b feature/AmazingFeature`)
@@ -157,13 +153,9 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ## Support
 
--   Create an issue in the GitHub repository
--   Contact the maintainers at [email]
+-   Create an [issue](https://github.com/aidanwyber/imagetrace/issues) in the GitHub repository
 
 ## Roadmap
 
--   [ ] WebAssembly optimization
--   [ ] Additional color space support
--   [ ] Browser extension
--   [ ] Real-time video processing
--   [ ] Additional export formats
+-   [ ] More detailed smoothing options
+-   [ ] Automatic SVG download
