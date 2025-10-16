@@ -1,4 +1,4 @@
-# VectorCraft
+# `imagetrace`
 
 A simple TypeScript library for converting raster images to vector graphics, given the set of colours to trace for.
 
