@@ -1,11 +1,11 @@
 import type { Vec2 } from './types';
 
 function cross2(o: Vec2, a: Vec2, b: Vec2): number {
-	return (a[0] - o[0]) * (b[1] - o[1]) - (a[1] - o[1]) * (b[0] - o[0]);
+	return (a.x - o.x) * (b.y - o.y) - (a.y - o.y) * (b.x - o.x);
 }
 
 function pointsEqual(a: Vec2, b: Vec2): boolean {
-	return a[0] === b[0] && a[1] === b[1];
+	return a.x === b.x && a.y === b.y;
 }
 
 export function createConvexHullPoints(pointCloud: Vec2[]): Vec2[] {
@@ -13,9 +13,9 @@ export function createConvexHullPoints(pointCloud: Vec2[]): Vec2[] {
 		return pointCloud.slice();
 	}
 
-	const sorted = pointCloud
-		.map(point => [point[0], point[1]] as Vec2)
-		.sort((a, b) => (a[0] === b[0] ? a[1] - b[1] : a[0] - b[0]));
+	const sorted = pointCloud.sort((a, b) =>
+		a.x === b.x ? a.y - b.y : a.x - b.x
+	);
 
 	const unique: Vec2[] = [];
 	for (const point of sorted) {

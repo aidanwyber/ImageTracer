@@ -1,115 +1,151 @@
 // import { createHullPoints } from './createHull';
-import type { Color, Vec2 } from './types';
+import type { Color, Vec2, ImageDataLike, ImageTracerOptions } from './types';
 import { Hull } from './Hull';
 import { smoothedSVGPathData } from './smoothedSVGPathData';
+import { nf } from './util';
 
-export interface ImageDataLike {
-	data: ArrayLike<number>;
-	width: number;
-	height: number;
-}
-
+/**
+ * ImageTracer converts raster images to vector graphics by detecting and tracing
+ * color-matched regions into SVG paths.
+ */
 export class ImageTracer {
 	readonly width: number;
 	readonly height: number;
-	readonly pixelGridSize: number;
+	readonly smoothingMinLength: number;
+	readonly chaikinSmoothingSteps: number;
+	readonly pixelGridStepSize: number;
 	readonly hulls: Hull[];
-	smoothingMinLength: number;
+	readonly debugPointRadius: number | undefined;
 
+	/**
+	 * Creates a new ImageTracer instance
+	 *
+	 * @param imageData - The source image data to trace
+	 * @param palette - Array of colors to match against
+	 * @param options - Configuration options for tracing
+	 * @throws {Error} If imageData or palette is invalid
+	 */
 	constructor(
 		imageData: ImageDataLike,
 		palette: Color[],
-		smoothingMinLength: number,
-		pixelGridSize = 1
+		options: ImageTracerOptions
 	) {
-		if (!imageData) {
-			throw new Error('imageData is required');
-		}
+		if (!imageData) throw new Error('imageData is required');
+		if (!palette?.length)
+			throw new Error('palette must contain at least one color');
 
-		if (!palette?.length) {
-			throw new Error('palette must contain at least one colour');
-		}
+		const {
+			smoothingMinLength,
+			chaikinSmoothingSteps,
+			pixelGridStepSize = 1,
+			debugPointRadius,
+		} = options;
 
 		this.width = imageData.width;
 		this.height = imageData.height;
 		this.smoothingMinLength = smoothingMinLength;
-		this.pixelGridSize = Math.max(1, Math.floor(pixelGridSize));
-
-		this.hulls = palette.map(color =>
-			this.createHullForColor(imageData, color)
-		);
+		this.chaikinSmoothingSteps = chaikinSmoothingSteps;
+		this.pixelGridStepSize = Math.max(1, Math.floor(pixelGridStepSize));
+		this.debugPointRadius = debugPointRadius;
+		this.hulls = this.createHullsFromPalette(imageData, palette);
 	}
 
+	/**
+	 * Retrieves a hull by its color
+	 */
 	getHullByColor(color: Color): Hull | undefined {
-		return this.hulls.find(
-			hull =>
-				hull.color.r === color.r &&
-				hull.color.g === color.g &&
-				hull.color.b === color.b
-		);
+		return this.hulls.find(hull => this.colorsMatch(hull.color, color));
 	}
 
-	createHullForColor(imageData: ImageDataLike, color: Color): Hull {
+	/**
+	 * Generates an SVG string representation of the traced image
+	 */
+	getSVGString(): string {
+		const svg: string[] = [
+			`<svg width="${this.width}" height="${this.height}" `,
+			'version="1.1" xmlns="http://www.w3.org/2000/svg" ',
+			'desc="Created with VectorCraft">\n',
+		];
+
+		for (const hull of this.hulls) {
+			svg.push(this.createPathElement(hull.hullPoints, hull.color));
+
+			if (this.debugPointRadius !== undefined) {
+				svg.push(this.createPointElements(hull.hullPoints));
+			}
+		}
+
+		svg.push('</svg>');
+		return svg.join('');
+	}
+
+	private createHullsFromPalette(
+		imageData: ImageDataLike,
+		palette: Color[]
+	): Hull[] {
+		return palette.map(color => this.createHullForColor(imageData, color));
+	}
+
+	private createHullForColor(imageData: ImageDataLike, color: Color): Hull {
 		const maskPoints = this.createMaskPointCloud(imageData, color);
-		return new Hull(color, maskPoints);
+		return new Hull(color, maskPoints, this.smoothingMinLength);
 	}
 
-	createMaskPointCloud(imageData: ImageDataLike, color: Color): Vec2[] {
-		const { data } = imageData;
-		const stride = this.pixelGridSize;
-		const width = imageData.width;
-		const height = imageData.height;
+	private createMaskPointCloud(
+		imageData: ImageDataLike,
+		color: Color
+	): Vec2[] {
+		const { data, width, height } = imageData;
 		const points: Vec2[] = [];
+		const stride = this.pixelGridStepSize;
 
 		for (let y = 0; y < height; y += stride) {
 			for (let x = 0; x < width; x += stride) {
 				const index = (y * width + x) * 4;
-				const r = data[index];
-				const g = data[index + 1];
-				const b = data[index + 2];
-				const a = data[index + 3];
-
-				const matches =
-					a !== 0 && r === color.r && g === color.g && b === color.b;
-
-				if (matches) {
-					points.push([x, y]);
+				if (this.pixelMatches(data, index, color)) {
+					points.push({ x, y });
 				}
 			}
 		}
 		return points;
 	}
 
-	getSVGString(precision = 3, doSmooth = true): string {
-		let svg = `<svg width="${this.width}" height="${this.height}" version="1.1" xmlns="http://www.w3.org/2000/svg" desc="Created with image-tracer">\n`;
+	private createPathElement(points: Vec2[], color: Color): string {
+		const { r, g, b } = color;
+		const pathData = smoothedSVGPathData(
+			points,
+			this.smoothingMinLength,
+			this.chaikinSmoothingSteps,
+			this.width,
+			this.height
+		);
+		return `<path fill="rgb(${r},${g},${b})" d="${pathData}" />\n`;
+	}
 
-		const nf = (x: number) =>
-			(Math.round(x * 10 ** precision) / 10 ** precision).toString();
+	private createPointElements(points: Vec2[]): string {
+		return points
+			.map(
+				point =>
+					`<circle cx="${nf(point.x)}" cy="${nf(point.y)}" ` +
+					`r="${this.debugPointRadius}" fill="#000" stroke="none" />\n`
+			)
+			.join('');
+	}
 
-		for (let hull of this.hulls) {
-			const { r, g, b } = hull.color;
-			const p0 = hull.hullPoints[0];
-			let path = `<path fill="rgb(${r},${g},${b})" d="`;
-			if (doSmooth) {
-				path += smoothedSVGPathData(
-					hull.hullPoints,
-					this.smoothingMinLength,
-					this.width,
-					this.height
-				);
-			} else {
-				path += `m ${nf(p0[0])} ${nf(p0[1])}`;
-				for (let point of hull.hullPoints.slice(1)) {
-					path += ` L ${point[0]} ${point[1]}`;
-				}
-				path += ' Z'; // close
-			}
-			path += '" />\n';
-			svg += path;
-		}
+	private pixelMatches(
+		data: ArrayLike<number>,
+		index: number,
+		color: Color
+	): boolean {
+		return (
+			data[index + 3] !== 0 && // alpha
+			data[index] === color.r &&
+			data[index + 1] === color.g &&
+			data[index + 2] === color.b
+		);
+	}
 
-		svg += `</svg>`;
-
-		return svg;
+	private colorsMatch(c1: Color, c2: Color): boolean {
+		return c1.r === c2.r && c1.g === c2.g && c1.b === c2.b;
 	}
 }

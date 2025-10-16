@@ -1,160 +1,161 @@
-import type { Color, Vec2 } from './types';
+import type { Vec2, SmoothingOptions } from './types';
+import { nf } from './util';
 
+/**
+ * Converts an array of 2D points into a smooth SVG path using Catmull-Rom splines
+ * and Chaikin's corner cutting algorithm.
+ *
+ * @param points - Array of Vec2 points to be converted
+ * @param smoothingMinLength - Minimum length threshold for smoothing
+ * @param chaikinSmoothingSteps - Number of Chaikin smoothing iterations
+ * @param width - Canvas width
+ * @param height - Canvas height
+ * @returns SVG path data string
+ */
 export function smoothedSVGPathData(
 	points: Vec2[],
 	smoothingMinLength: number,
+	chaikinSmoothingSteps: number,
 	width: number,
 	height: number
 ): string {
-	// hull: Array<[x,y]> from concaveman
-	points = reducePoints(points, smoothingMinLength);
-	const pts = points.map(([x, y]) => ({ x, y }));
-	const d = pointsToQuadraticSVGPath(pts, width, height, {
-		closed: true,
-		eps: 1e-3,
-		chaikinRounds: 1, // try 0, 1, or 2 depending on noisiness
-	});
-	return d;
+	// const pts = points.map(([x, y]): Vec2 => ({ x, y }));
+	const smoothedPoints = applyChaikinSmoothing(
+		points,
+		chaikinSmoothingSteps,
+		true
+	);
+	return catmullRomToBezierPath(smoothedPoints);
 }
 
-function reducePoints(points: Vec2[], minDist: number) {
-	const minDistSq = minDist * minDist;
-	const filteredPoints: Vec2[] = [];
-	for (const pt of points) {
-		if (filteredPoints.length === 0) {
-			filteredPoints.push(pt);
-			continue;
-		}
-
-		const dx = pt[0] - filteredPoints[filteredPoints.length - 1][0];
-		const dy = pt[1] - filteredPoints[filteredPoints.length - 1][1];
-		const distSq = dx * dx + dy + dy;
-
-		if (distSq >= minDistSq) {
-			filteredPoints.push(pt);
-		}
-	}
-	return filteredPoints;
-}
-
-type Pt = { x: number; y: number };
-
-function pointsToQuadraticSVGPath(
-	pts: Pt[],
-	width: number,
-	height: number,
-	opts: {
-		closed?: boolean;
-		eps?: number; // tolerance for “touches border”
-		chaikinRounds?: number; // optional pre-smoothing
-	} = {}
+/**
+ * Converts Catmull-Rom control points into a smooth cubic Bezier SVG path.
+ *
+ * @param points - Array of control points
+ * @param options - Optional configuration for path generation
+ * @returns SVG path data string
+ */
+export function catmullRomToBezierPath(
+	points: Vec2[],
+	options: SmoothingOptions = {}
 ): string {
-	const closed = opts.closed ?? true;
-	const eps = opts.eps ?? 1e-6;
-	const chaikinRounds = opts.chaikinRounds ?? 0;
+	const { isClosed = true, alpha = 0.5 } = options;
 
-	if (pts.length < 2) return '';
+	if (points.length < 2) return '';
 
-	// Optional: light pre-smoothing of the hull
-	let P = pts.slice();
-	for (let r = 0; r < chaikinRounds; r++) P = chaikinOnce(P, closed);
+	const P = preparePointArray(points, isClosed);
+	let pathData = `M ${nf(points[0].x)} ${nf(points[0].y)}`;
 
-	const n = P.length;
-	const isBorder = (p: Pt) =>
-		Math.abs(p.x - 0) < eps ||
-		Math.abs(p.y - 0) < eps ||
-		Math.abs(p.x - width) < eps ||
-		Math.abs(p.y - height) < eps;
-
-	// Midpoints between consecutive vertices (wrap if closed)
-	const M: Pt[] = [];
-	const last = (i: number) => (i + n) % n;
-	for (let i = 0; i < n; i++) {
-		// const j = closed ? (i + 1) % n : i + 1;
-		const j = (i + 1) % n; // wraps around, assumes being closes
-		if (j >= n) break;
-		M.push({ x: (P[i].x + P[j].x) / 2, y: (P[i].y + P[j].y) / 2 });
+	for (let i = 1; i < P.length - 2; i++) {
+		const [c1x, c1y, c2x, c2y] = calculateBezierControlPoints(
+			P[i - 1],
+			P[i],
+			P[i + 1],
+			P[i + 2],
+			alpha
+		);
+		pathData += ` C ${nf(c1x)} ${nf(c1y)}, ${nf(c2x)} ${nf(c2y)}, ${nf(
+			P[i + 1].x
+		)} ${nf(P[i + 1].y)}`;
 	}
 
-	// Start at first midpoint for closed shapes, else at first point
-	let d = '';
-	if (closed) {
-		d += `M ${M[0].x} ${M[0].y}`;
-		for (let i = 0; i < n; i++) {
-			const ctrl = P[i];
-			const end = M[i % M.length];
-
-			if (isBorder(ctrl)) {
-				// Force a sharp vertex at ctrl:
-				// 1) end previous segment exactly at the vertex (break tangent)
-				d += ` Q ${ctrl.x} ${ctrl.y}, ${ctrl.x} ${ctrl.y}`;
-				// 2) leave the corner using the usual quadratic segment
-				d += ` Q ${ctrl.x} ${ctrl.y}, ${end.x} ${end.y}`;
-			} else {
-				// Smooth quadratic segment
-				d += ` Q ${ctrl.x} ${ctrl.y}, ${end.x} ${end.y}`;
-			}
-		}
-		d += ' Z';
-	} else {
-		// Open polyline variant
-		d += `M ${P[0].x} ${P[0].y}`;
-		for (let i = 0; i < n - 1; i++) {
-			const ctrl = P[i];
-			const end = {
-				x: (P[i].x + P[i + 1].x) / 2,
-				y: (P[i].y + P[i + 1].y) / 2,
-			};
-			if (isBorder(ctrl)) {
-				d += ` Q ${ctrl.x} ${ctrl.y}, ${ctrl.x} ${ctrl.y}`;
-				d += ` Q ${ctrl.x} ${ctrl.y}, ${end.x} ${end.y}`;
-			} else {
-				d += ` Q ${ctrl.x} ${ctrl.y}, ${end.x} ${end.y}`;
-			}
-		}
-		// Finish at last point
-		d += ` L ${P[n - 1].x} ${P[n - 1].y}`;
-	}
-
-	return d;
+	return isClosed ? `${pathData} Z` : pathData;
 }
 
-// One round of Chaikin’s corner-cutting (keeps endpoints if open)
-function chaikinOnce(pts: Pt[], closed: boolean): Pt[] {
-	const out: Pt[] = [];
-	const n = pts.length;
-	if (!closed) out.push(pts[0]);
+/**
+ * Applies multiple iterations of Chaikin's corner-cutting algorithm
+ *
+ * @param points - Array of points to smooth
+ * @param iterations - Number of smoothing iterations
+ * @param isClosed - Whether the path is closed
+ * @returns Smoothed array of points
+ */
+function applyChaikinSmoothing(
+	points: Vec2[],
+	iterations: number,
+	isClosed: boolean
+): Vec2[] {
+	let result = points;
+	for (let i = 0; i < iterations; i++) {
+		result = chaikinOnce(result, isClosed);
+	}
+	return result;
+}
 
-	const end = closed ? n : n - 1;
+/**
+ * Performs one iteration of Chaikin's corner-cutting algorithm
+ *
+ * @param pts - Input points
+ * @param isClosed - Whether the path is closed
+ * @returns New array of smoothed points
+ */
+function chaikinOnce(pts: Vec2[], isClosed: boolean): Vec2[] {
+	const out: Vec2[] = [];
+	const n = pts.length;
+
+	if (!isClosed) out.push(pts[0]);
+
+	const end = isClosed ? n : n - 1;
 	for (let i = 0; i < end - 1; i++) {
-		const p = pts[i],
-			q = pts[i + 1];
-		const Q = {
-			x: 0.75 * p.x + 0.25 * q.x,
-			y: 0.75 * p.y + 0.25 * q.y,
-		};
-		const R = {
-			x: 0.25 * p.x + 0.75 * q.x,
-			y: 0.25 * p.y + 0.75 * q.y,
-		};
+		const [Q, R] = calculateChaikinPoints(pts[i], pts[i + 1]);
 		out.push(Q, R);
 	}
 
-	if (!closed) out.push(pts[n - 1]);
-	else {
-		// wrap last->first
-		const p = pts[n - 1],
-			q = pts[0];
-		const Q = {
-			x: 0.75 * p.x + 0.25 * q.x,
-			y: 0.75 * p.y + 0.25 * q.y,
-		};
-		const R = {
-			x: 0.25 * p.x + 0.75 * q.x,
-			y: 0.25 * p.y + 0.75 * q.y,
-		};
+	if (!isClosed) {
+		out.push(pts[n - 1]);
+	} else {
+		const [Q, R] = calculateChaikinPoints(pts[n - 1], pts[0]);
 		out.push(Q, R);
 	}
 
 	return out;
+}
+
+/**
+ * Helper function to calculate Bezier control points
+ */
+function calculateBezierControlPoints(
+	p0: Vec2,
+	p1: Vec2,
+	p2: Vec2,
+	p3: Vec2,
+	alpha: number
+): [number, number, number, number] {
+	const t1x = alpha * (p2.x - p0.x);
+	const t1y = alpha * (p2.y - p0.y);
+	const t2x = alpha * (p3.x - p1.x);
+	const t2y = alpha * (p3.y - p1.y);
+
+	return [p1.x + t1x / 3, p1.y + t1y / 3, p2.x - t2x / 3, p2.y - t2y / 3];
+}
+
+/**
+ * Helper function to calculate Chaikin points
+ */
+function calculateChaikinPoints(p: Vec2, q: Vec2): [Vec2, Vec2] {
+	return [
+		{
+			x: 0.75 * p.x + 0.25 * q.x,
+			y: 0.75 * p.y + 0.25 * q.y,
+		},
+		{
+			x: 0.25 * p.x + 0.75 * q.x,
+			y: 0.25 * p.y + 0.75 * q.y,
+		},
+	];
+}
+
+/**
+ * Helper function to prepare point array for path generation
+ */
+function preparePointArray(points: Vec2[], isClosed: boolean): Vec2[] {
+	const P = points.slice();
+	if (isClosed) {
+		P.unshift(points[points.length - 1]);
+		P.push(points[0], points[1]);
+	} else {
+		P.unshift(points[0]);
+		P.push(points[points.length - 1]);
+	}
+	return P;
 }

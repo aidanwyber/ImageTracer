@@ -4,7 +4,10 @@ import { loadImage, createCanvas } from 'canvas';
 import { ImageTracer } from '../src/ImageTracer';
 
 test('correct number of hulls and writes an SVG file', async () => {
-	const image = await loadImage('test/test-128.png');
+	const size = '1080';
+	// const size = '128';
+	const image = await loadImage(`test/test-${size}.png`);
+	// const image = await loadImage('test/test-1080.png');
 	const canvas = createCanvas(image.width, image.height);
 	const ctx = canvas.getContext('2d');
 	ctx.drawImage(image, 0, 0);
@@ -15,19 +18,25 @@ test('correct number of hulls and writes an SVG file', async () => {
 		{ r: 0, g: 0, b: 255 },
 	];
 
-	const it = new ImageTracer(imageData, palette, 1);
+	const maxSize = Math.max(image.width, image.height);
+
+	const it = new ImageTracer(imageData, palette, {
+		chaikinSmoothingSteps: 5,
+		smoothingMinLength: (5 * maxSize) / 128,
+		debugPointRadius: (0.5 * maxSize) / 128,
+	});
 
 	const svgString = it.getSVGString();
 
-	// Create an output directory
+	// create an output directory
 	const outDir = path.join(__dirname, 'output');
 	if (!fs.existsSync(outDir)) fs.mkdirSync(outDir);
 
-	// Write the SVG to disk
-	const svgPath = path.join(outDir, 'test-128.svg');
+	// write the SVG to disk
+	const svgPath = path.join(outDir, `test-${size}.svg`);
 	fs.writeFileSync(svgPath, svgString, 'utf8');
 
-	// Assert the file exists and contains valid content
+	// assert the file exists and contains valid content
 	const contents = fs.readFileSync(svgPath, 'utf8');
 
 	expect(it.hulls.length).toBe(2);
