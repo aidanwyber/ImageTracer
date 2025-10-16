@@ -1,6 +1,6 @@
 {
-	"name": "image-tracer",
-	"version": "0.0.0",
+	"name": "imagetrace",
+	"version": "1.0.0",
 	"description": "Geometry and physics library for creative coding in JavaScript and TypeScript.",
 	"keywords": [
 		"geometry",
@@ -9,25 +9,31 @@
 		"javascript",
 		"p5.js"
 	],
-	"homepage": "https://github.com/aidanwyber/ImageTracer#readme",
+	"homepage": "https://github.com/aidanwyber/imagetrace#readme",
 	"bugs": {
-		"url": "https://github.com/aidanwyber/ImageTracer/issues"
+		"url": "https://github.com/aidanwyber/imagetrace/issues"
 	},
 	"repository": {
 		"type": "git",
-		"url": "git+https://github.com/aidanwyber/ImageTracer.git"
+		"url": "git+https://github.com/aidanwyber/imagetrace.git"
 	},
 	"license": "MIT",
 	"author": "Aidan Wyber",
 	"type": "module",
 	"main": "./dist/index.js",
 	"types": "./dist/index.d.ts",
+	"directories": {
+		"test": "test"
+	},
 	"files": [
 		"./dist"
 	],
 	"scripts": {
 		"test": "vitest",
 		"build": "tsup src/index.ts --format cjs,esm --dts"
+	},
+	"dependencies": {
+		"concaveman": "^2.0.0"
 	},
 	"devDependencies": {
 		"@types/concaveman": "^1.1.6",
@@ -38,8 +44,5 @@
 		"typescript": "^5.9.3",
 		"vitest": "^3.2.4"
 	},
-	"module": "./dist/index.mjs",
-	"dependencies": {
-		"concaveman": "^2.0.0"
-	}
+	"module": "./dist/index.mjs"
 }

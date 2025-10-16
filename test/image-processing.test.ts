@@ -1,7 +1,7 @@
 import fs from 'fs';
 import path from 'path';
 import { loadImage, createCanvas } from 'canvas';
-import { ImageTracer } from '../src/ImageTracer';
+import { ImageTrace } from '../src/ImageTrace';
 
 test('correct number of hulls and writes an SVG file', async () => {
 	const size = '1080';
@@ -20,7 +20,7 @@ test('correct number of hulls and writes an SVG file', async () => {
 
 	const maxSize = Math.max(image.width, image.height);
 
-	const it = new ImageTracer(imageData, palette, {
+	const it = new ImageTrace(imageData, palette, {
 		chaikinSmoothingSteps: 5,
 		smoothingMinLength: (5 * maxSize) / 128,
 		debugPointRadius: (0.5 * maxSize) / 128,

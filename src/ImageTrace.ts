@@ -1,14 +1,14 @@
 // import { createHullPoints } from './createHull';
-import type { Color, Vec2, ImageDataLike, ImageTracerOptions } from './types';
+import type { Color, Vec2, ImageDataLike, ImageTraceOptions } from './types';
 import { Hull } from './Hull';
 import { smoothedSVGPathData } from './smoothedSVGPathData';
 import { nf } from './util';
 
 /**
- * ImageTracer converts raster images to vector graphics by detecting and tracing
+ * ImageTrace converts raster images to vector graphics by detecting and tracing
  * color-matched regions into SVG paths.
  */
-export class ImageTracer {
+export class ImageTrace {
 	readonly width: number;
 	readonly height: number;
 	readonly smoothingMinLength: number;
@@ -18,7 +18,7 @@ export class ImageTracer {
 	readonly debugPointRadius: number | undefined;
 
 	/**
-	 * Creates a new ImageTracer instance
+	 * Creates a new ImageTrace instance
 	 *
 	 * @param imageData - The source image data to trace
 	 * @param palette - Array of colors to match against
@@ -28,7 +28,7 @@ export class ImageTracer {
 	constructor(
 		imageData: ImageDataLike,
 		palette: Color[],
-		options: ImageTracerOptions
+		options: ImageTraceOptions
 	) {
 		if (!imageData) throw new Error('imageData is required');
 		if (!palette?.length)

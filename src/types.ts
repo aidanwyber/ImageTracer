@@ -7,7 +7,7 @@ export interface ImageDataLike {
 	height: number;
 }
 
-export interface ImageTracerOptions {
+export interface ImageTraceOptions {
 	smoothingMinLength: number;
 	chaikinSmoothingSteps: number;
 	pixelGridStepSize?: number;
