@@ -1,6 +1,6 @@
 # `imagetrace`
 
-A simple TypeScript library for converting raster images to vector graphics, given the set of colours to trace for.
+A simple TypeScript library for converting raster images to vector graphics, given the set of colours to trace for. This library is meant for flat, organic, 2D shapes with a uniform colour. I built this package to be used with the output of a shader script.
 
 ![Version](https://img.shields.io/badge/version-1.0.0-blue.svg)
 ![License](https://img.shields.io/badge/license-MIT-green.svg)
@@ -122,12 +122,18 @@ const svg = tracer.getSVGString();
 
 ## Credits
 
-This project builds upon several excellent works:
+### Dependencies
 
--   Blob detection algorithm inspired by Jeff Thompson's work:
-    -   [CP2: Blob Detection – Webcam Tracking in p5.js](https://www.youtube.com/watch?v=G7u26vfiUX8)
-    -   [Original p5.js implementation](https://editor.p5js.org/jeffThompson/sketches/rFeSWevtU)
-    -   More at [jeffreythompson.org](http://jeffreythompson.org)
+-   [concaveman](https://github.com/mapbox/concaveman) - A fast 2D concave hull algorithm by Vladimir Agafonkin (@mourner)
+
+### Inspirations
+
+-   Jeff Thompson's blob detection experiments:
+
+    -   [Webcam Tracking Demo](https://www.youtube.com/watch?v=G7u26vfiUX8)
+    -   [p5.js sketches](https://editor.p5js.org/jeffThompson/sketches/rFeSWevtU)
+
+-   [ImageTracerJS](https://github.com/jankovicsandras/imagetracerjs) by András Jankovics, a raster image tracer and vectorizer written in JavaScript
 
 ## Contributing
 
