@@ -7,7 +7,6 @@ test('correct number of hulls and writes an SVG file', async () => {
 	const size = '1080';
 	// const size = '128';
 	const image = await loadImage(`test/test-${size}.png`);
-	// const image = await loadImage('test/test-1080.png');
 	const canvas = createCanvas(image.width, image.height);
 	const ctx = canvas.getContext('2d');
 	ctx.drawImage(image, 0, 0);
@@ -20,10 +19,11 @@ test('correct number of hulls and writes an SVG file', async () => {
 
 	const maxSize = Math.max(image.width, image.height);
 
+	const scale = maxSize / 1080;
 	const it = new ImageTrace(imageData, palette, {
-		chaikinSmoothingSteps: 5,
-		smoothingMinLength: (5 * maxSize) / 128,
-		debugPointRadius: (0.5 * maxSize) / 128,
+		pathSimplification: 10 * scale,
+		curveFittingTolerance: 1,
+		debugPointRadius: 4 * scale,
 	});
 
 	const svgString = it.getSVGString();
@@ -39,6 +39,6 @@ test('correct number of hulls and writes an SVG file', async () => {
 	// assert the file exists and contains valid content
 	const contents = fs.readFileSync(svgPath, 'utf8');
 
-	expect(it.hulls.length).toBe(2);
+	expect(it.validHulls.length).toBe(2);
 	expect(contents).toContain('<svg');
 });

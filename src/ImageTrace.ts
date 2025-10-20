@@ -1,7 +1,6 @@
 // import { createHullPoints } from './createHull';
 import type { Color, Vec2, ImageDataLike, ImageTraceOptions } from './types';
 import { Hull } from './Hull';
-import { smoothedSVGPathData } from './smoothedSVGPathData';
 import { nf } from './util';
 
 /**
@@ -11,10 +10,10 @@ import { nf } from './util';
 export class ImageTrace {
 	readonly width: number;
 	readonly height: number;
-	readonly smoothingMinLength: number;
-	readonly chaikinSmoothingSteps: number;
+	readonly curveFittingTolerance: number;
+	readonly pathSimplification: number;
 	readonly pixelGridStepSize: number;
-	readonly hulls: Hull[];
+	readonly validHulls: Hull[];
 	readonly debugPointRadius: number | undefined;
 
 	/**
@@ -35,26 +34,28 @@ export class ImageTrace {
 			throw new Error('palette must contain at least one color');
 
 		const {
-			smoothingMinLength,
-			chaikinSmoothingSteps,
+			pathSimplification,
+			curveFittingTolerance,
 			pixelGridStepSize = 1,
 			debugPointRadius,
 		} = options;
 
 		this.width = imageData.width;
 		this.height = imageData.height;
-		this.smoothingMinLength = smoothingMinLength;
-		this.chaikinSmoothingSteps = chaikinSmoothingSteps;
+		this.curveFittingTolerance = curveFittingTolerance;
+		this.pathSimplification = pathSimplification;
 		this.pixelGridStepSize = Math.max(1, Math.floor(pixelGridStepSize));
 		this.debugPointRadius = debugPointRadius;
-		this.hulls = this.createHullsFromPalette(imageData, palette);
+		this.validHulls = this.createHullsFromPalette(imageData, palette);
 	}
 
 	/**
 	 * Retrieves a hull by its color
 	 */
 	getHullByColor(color: Color): Hull | undefined {
-		return this.hulls.find(hull => this.colorsMatch(hull.color, color));
+		return this.validHulls.find(hull =>
+			this.colorsMatch(hull.color, color)
+		);
 	}
 
 	/**
@@ -63,18 +64,43 @@ export class ImageTrace {
 	getSVGString(): string {
 		const svg: string[] = [
 			`<svg width="${this.width}" height="${this.height}" `,
-			'version="1.1" xmlns="http://www.w3.org/2000/svg" ',
-			'desc="Created with VectorCraft">\n',
+			'version="1.1" xmlns="http://www.w3.org/2000/svg">\n',
 		];
-
-		for (const hull of this.hulls) {
-			svg.push(this.createPathElement(hull.hullPoints, hull.color));
+		for (const hull of this.validHulls) {
+			svg.push(hull.getPathElem());
 
 			if (this.debugPointRadius !== undefined) {
-				svg.push(this.createPointElements(hull.hullPoints));
+				for (let point of hull.hullPoints) {
+					svg.push(
+						`<circle cx="${nf(point.x)}" cy="${nf(point.y)}" ` +
+							`r="${
+								this.debugPointRadius
+							}" fill="none" stroke="#000" strokeWeight="${
+								this.debugPointRadius / 5
+							}" />\n`
+					);
+				}
+
+				if (hull.cubics !== undefined)
+					for (let c of hull.cubics) {
+						svg.push(
+							`<circle cx="${nf(c[0].x)}" cy="${nf(c[0].y)}" r="${
+								this.debugPointRadius
+							}" fill="#000" stroke="none" />\n` +
+								`<circle cx="${nf(c[1].x)}" cy="${nf(
+									c[1].y
+								)}" r="${
+									this.debugPointRadius / 2
+								}" fill="#000" stroke="none" />\n` +
+								`<circle cx="${nf(c[2].x)}" cy="${nf(
+									c[2].y
+								)}" r="${
+									this.debugPointRadius / 2
+								}" fill="#000" stroke="none" />\n`
+						);
+					}
 			}
 		}
-
 		svg.push('</svg>');
 		return svg.join('');
 	}
@@ -83,12 +109,19 @@ export class ImageTrace {
 		imageData: ImageDataLike,
 		palette: Color[]
 	): Hull[] {
-		return palette.map(color => this.createHullForColor(imageData, color));
+		return palette
+			.map(color => this.createHullForColor(imageData, color))
+			.filter(hull => hull.isValid);
 	}
 
 	private createHullForColor(imageData: ImageDataLike, color: Color): Hull {
 		const maskPoints = this.createMaskPointCloud(imageData, color);
-		return new Hull(color, maskPoints, this.smoothingMinLength);
+		return new Hull(
+			color,
+			maskPoints,
+			this.pathSimplification,
+			this.curveFittingTolerance
+		);
 	}
 
 	private createMaskPointCloud(
@@ -108,28 +141,6 @@ export class ImageTrace {
 			}
 		}
 		return points;
-	}
-
-	private createPathElement(points: Vec2[], color: Color): string {
-		const { r, g, b } = color;
-		const pathData = smoothedSVGPathData(
-			points,
-			this.smoothingMinLength,
-			this.chaikinSmoothingSteps,
-			this.width,
-			this.height
-		);
-		return `<path fill="rgb(${r},${g},${b})" d="${pathData}" />\n`;
-	}
-
-	private createPointElements(points: Vec2[]): string {
-		return points
-			.map(
-				point =>
-					`<circle cx="${nf(point.x)}" cy="${nf(point.y)}" ` +
-					`r="${this.debugPointRadius}" fill="#000" stroke="none" />\n`
-			)
-			.join('');
 	}
 
 	private pixelMatches(
