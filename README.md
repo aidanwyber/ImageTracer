@@ -13,8 +13,23 @@ npm: https://www.npmjs.com/package/imagetrace
 -   🔄 Raster to vector conversion
 -   🎯 Color-based region detection
 -   🎨 Blob detection algorithm
--   🔍 Point visualization option
--   💪 Written in TypeScript with full type safety
+-   🤹 Blob separation algorithm
+-   ✒️ Point visualization option
+-   💪 TypeScript type safety
+
+## Example
+
+|          Input PNG           |              Output SVG              |
+| :--------------------------: | :----------------------------------: |
+| ![Input](test/test-1080.png) | ![Output](test/output/test-1080.svg) |
+
+The example above shows the conversion from a raster PNG image (left) to a vectorized SVG output (right). Notice how the library:
+
+-   Detects color regions
+-   Preserves shapes
+-   Creates simple vector paths
+-   Skips holes ⚠️
+-   Gives an option for viewing the path points: the simplified polygon (stroked black) and bezier points (filled black)
 
 ## Installation
 
@@ -100,20 +115,6 @@ npm run build
 npm test
 ```
 
-## Examples
-
-### Image Conversion Example
-
-Input PNG             |  Output SVG
-:-------------------------:|:-------------------------:
-![Input](test/test-1080.png)  |  ![Output](test/output/test-1080.svg)
-
-The example above shows the conversion from a raster PNG image (left) to a vectorized SVG output (right). Notice how the library:
-- Accurately detects color regions
-- Creates smooth vector paths
-- Preserves the original shapes
-- Maintains crisp edges at any scale
-
 ### Basic Usage
 
 ```typescript
@@ -126,8 +127,9 @@ const imageData = ctx.getImageData(0, 0, width, height);
 
 // create tracer instance for yellow shapes
 const tracer = new ImageTrace(imageData, [{ r: 255, g: 255, b: 0 }], {
-	smoothingMinLength: 5,
-	chaikinSmoothingSteps: 5,
+	pathSimplificationTolerance: 3,
+	curveFittingTolerance: 2,
+	minHullDistance: 3,
 });
 
 // get SVG output
