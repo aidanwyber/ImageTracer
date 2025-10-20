@@ -1,107 +1,110 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import type { Vec2, Color } from '../src/types';
 
-const { concavemanMock, simplifyMock, createTangentMock, fitCubicMock } = vi.hoisted(() => ({
-        concavemanMock: vi.fn<(points: number[][]) => number[][]>(points => points),
-        simplifyMock: vi.fn<
-                (points: Vec2[], tolerance: number, highQuality: boolean) => Vec2[]
-        >(points => points),
-        createTangentMock: vi.fn(() => [1, 0] as const),
-        fitCubicMock: vi.fn(() => [
-                [
-                        [0, 0],
-                        [1, 1],
-                        [2, 2],
-                        [3, 3],
-                ],
-        ]),
-}));
+const { concavemanMock, simplifyMock, createTangentMock, fitCubicMock } =
+	vi.hoisted(() => ({
+		concavemanMock: vi.fn<(points: number[][]) => number[][]>(
+			points => points
+		),
+		simplifyMock: vi.fn<
+			(points: Vec2[], tolerance: number, highQuality: boolean) => Vec2[]
+		>(points => points),
+		createTangentMock: vi.fn(() => [1, 0] as const),
+		fitCubicMock: vi.fn(() => [
+			[
+				[0, 0],
+				[1, 1],
+				[2, 2],
+				[3, 3],
+			],
+		]),
+	}));
 
 vi.mock('concaveman', () => ({
-        default: concavemanMock,
+	default: concavemanMock,
 }));
 
 vi.mock('simplify-js', () => ({
-        default: simplifyMock,
+	default: simplifyMock,
 }));
 
 vi.mock('fit-curve', () => ({
-        createTangent: createTangentMock,
-        fitCubic: fitCubicMock,
+	createTangent: createTangentMock,
+	fitCubic: fitCubicMock,
 }));
 
 import { Hull } from '../src/Hull';
 
 const COLOR: Color = { r: 255, g: 0, b: 0 };
 const SAMPLE_POINTS: Vec2[] = [
-        { x: 0, y: 0 },
-        { x: 2, y: 0 },
-        { x: 2, y: 2 },
-        { x: 0, y: 2 },
+	{ x: 0, y: 0 },
+	{ x: 2, y: 0 },
+	{ x: 2, y: 2 },
+	{ x: 0, y: 2 },
 ];
 
 describe('Hull', () => {
-        beforeEach(() => {
-                concavemanMock.mockClear();
-                simplifyMock.mockClear();
-                createTangentMock.mockClear();
-                fitCubicMock.mockClear();
+	beforeEach(() => {
+		concavemanMock.mockClear();
+		simplifyMock.mockClear();
+		createTangentMock.mockClear();
+		fitCubicMock.mockClear();
 
-                concavemanMock.mockImplementation(points => points);
-                simplifyMock.mockImplementation(points => points);
-                createTangentMock.mockReturnValue([1, 0]);
-                fitCubicMock.mockReturnValue([
-                        [
-                                [0, 0],
-                                [1, 1],
-                                [2, 2],
-                                [3, 3],
-                        ],
-                ]);
-        });
+		concavemanMock.mockImplementation(points => points);
+		simplifyMock.mockImplementation(points => points);
+		createTangentMock.mockReturnValue([1, 0]);
+		fitCubicMock.mockReturnValue([
+			[
+				[0, 0],
+				[1, 1],
+				[2, 2],
+				[3, 3],
+			],
+		]);
+	});
 
-        it('marks hulls with fewer than three points as invalid', () => {
-                concavemanMock.mockReturnValueOnce([
-                        [0, 0],
-                        [1, 1],
-                ]);
-                const hull = new Hull(COLOR, SAMPLE_POINTS.slice(0, 2), 1, 1);
+	it('marks hulls with fewer than three points as invalid', () => {
+		concavemanMock.mockReturnValueOnce([
+			[0, 0],
+			[1, 1],
+		]);
+		const hull = new Hull(COLOR, SAMPLE_POINTS.slice(0, 2), 1, 1);
 
-                expect(hull.isValid).toBe(false);
-                expect(hull.getPathElem()).toBe('');
-                expect(fitCubicMock).not.toHaveBeenCalled();
-        });
+		expect(hull.isValid).toBe(false);
+		expect(hull.getPathElem()).toBe('');
+		expect(fitCubicMock).not.toHaveBeenCalled();
+	});
 
-        it('generates SVG path data for valid hulls', () => {
-                const hull = new Hull(COLOR, SAMPLE_POINTS, 0.5, 2);
+	it('generates SVG path data for valid hulls', () => {
+		const hull = new Hull(COLOR, SAMPLE_POINTS, 0.5, 2);
 
-                expect(hull.isValid).toBe(true);
-                expect(hull.getPathData()).toBe('M 0 0 C 1 1, 2 2, 3 3 Z');
-                expect(hull.getPathElem()).toBe(
-                        '<path fill="rgb(255,0,0)" d="M 0 0 C 1 1, 2 2, 3 3 Z" />\n'
-                );
-                expect(createTangentMock).toHaveBeenCalledTimes(1);
-                expect(fitCubicMock).toHaveBeenCalledTimes(1);
-        });
+		expect(hull.isValid).toBe(true);
+		expect(hull.getPathData()).toBe('M 0 0 C 1 1, 2 2, 3 3 Z');
+		expect(hull.getPathElem()).toBe(
+			'<path fill="rgb(255,0,0)" d="M 0 0 C 1 1, 2 2, 3 3 Z" />\n'
+		);
+		expect(createTangentMock).toHaveBeenCalledTimes(1);
+		expect(fitCubicMock).toHaveBeenCalledTimes(1);
+	});
 
-        it('delegates point simplification to simplify-js', () => {
-                const hull = new Hull(COLOR, SAMPLE_POINTS, 0.5, 1);
-                simplifyMock.mockClear();
+	it('delegates point simplification to simplify-js', () => {
+		const hull = new Hull(COLOR, SAMPLE_POINTS, 0.5, 1);
+		simplifyMock.mockClear();
 
-                const arbitraryPoints: Vec2[] = [
-                        { x: 0, y: 0 },
-                        { x: 1, y: 1 },
-                        { x: 2, y: 0 },
-                ];
-                const simplifiedPoints: Vec2[] = [
-                        { x: 0, y: 0 },
-                        { x: 2, y: 0 },
-                ];
-                simplifyMock.mockReturnValueOnce(simplifiedPoints);
+		const arbitraryPoints: Vec2[] = [
+			{ x: 0, y: 0 },
+			{ x: 1, y: 1 },
+			{ x: 2, y: 0 },
+		];
+		const simplifiedPoints: Vec2[] = [
+			{ x: 0, y: 0 },
+			{ x: 2, y: 0 },
+		];
+		simplifyMock.mockReturnValueOnce(simplifiedPoints);
 
-                const result = hull.reducePoints(arbitraryPoints, 0.75);
+		const result = hull.reducePoints(arbitraryPoints, 0.75);
 
-                expect(simplifyMock).toHaveBeenCalledWith(arbitraryPoints, 0.75, true);
-                expect(result).toBe(simplifiedPoints);
-        });
+		expect(simplifyMock).toHaveBeenCalledWith(arbitraryPoints, 0.75, true);
+		expect(result).toBe(simplifiedPoints);
+	});
 });
