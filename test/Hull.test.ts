@@ -156,4 +156,61 @@ describe('Hull', () => {
                 });
                 expect(hull.getPathData()).toBe('M 0 0 L 2 0 C 0.5 0.2, 2.5 0.1, 0 2 L 0 0 Z');
         });
+
+        it('keeps near-boundary curve segments cubic', () => {
+                const nearBoundaryPoints: Vec2[] = [
+                        { x: 0, y: 0 },
+                        { x: 2, y: 0 },
+                        { x: 2.2, y: 0.5 },
+                        { x: 2.5, y: 1.5 },
+                        { x: 0, y: 2 },
+                ];
+
+                concavemanMock.mockReturnValueOnce(
+                        nearBoundaryPoints.map(({ x, y }) => [x, y])
+                );
+                simplifyMock.mockImplementationOnce(() => nearBoundaryPoints);
+                fitCubicMock.mockReturnValueOnce([
+                        [
+                                [2, 0],
+                                [2.1, 0.3],
+                                [2.4, 1],
+                                [2.5, 1.5],
+                        ],
+                        [
+                                [2.5, 1.5],
+                                [1.7, 1.8],
+                                [0.8, 1.9],
+                                [0, 2],
+                        ],
+                ]);
+
+                const hull = new Hull(COLOR, nearBoundaryPoints, 0.5, 1, WIDTH, HEIGHT);
+
+                expect(hull.pathSegments?.[0]).toEqual({
+                        type: 'L',
+                        points: [
+                                { x: 0, y: 0 },
+                                { x: 2, y: 0 },
+                        ],
+                });
+                expect(hull.pathSegments?.[1]).toEqual({
+                        type: 'C',
+                        points: [
+                                { x: 2, y: 0 },
+                                { x: 2.1, y: 0.3 },
+                                { x: 2.4, y: 1 },
+                                { x: 2.5, y: 1.5 },
+                        ],
+                });
+                expect(hull.pathSegments?.[2]).toEqual({
+                        type: 'C',
+                        points: [
+                                { x: 2.5, y: 1.5 },
+                                { x: 1.7, y: 1.8 },
+                                { x: 0.8, y: 1.9 },
+                                { x: 0, y: 2 },
+                        ],
+                });
+        });
 });

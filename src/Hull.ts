@@ -213,16 +213,23 @@ export class Hull {
 
         private getBoundarySides(pt: Vec2): BoundarySide[] {
                 const sides: BoundarySide[] = [];
-                const eps = 0.5;
                 const maxX = this.imageWidth - 1;
                 const maxY = this.imageHeight - 1;
 
-                if (Math.abs(pt.x - 0) <= eps) sides.push('LEFT');
-                if (Math.abs(pt.x - maxX) <= eps) sides.push('RIGHT');
-                if (Math.abs(pt.y - 0) <= eps) sides.push('TOP');
-                if (Math.abs(pt.y - maxY) <= eps) sides.push('BOTTOM');
+                if (this.isOnBoundary(pt.x, 0)) sides.push('LEFT');
+                if (this.isOnBoundary(pt.x, maxX)) sides.push('RIGHT');
+                if (this.isOnBoundary(pt.y, 0)) sides.push('TOP');
+                if (this.isOnBoundary(pt.y, maxY)) sides.push('BOTTOM');
 
                 return sides;
+        }
+
+        private isOnBoundary(value: number, boundary: number): boolean {
+                const rounded = Math.round(value);
+                if (rounded !== boundary) return false;
+
+                const tolerance = 1e-3;
+                return Math.abs(value - rounded) <= tolerance;
         }
 
         private pointKey({ x, y }: Vec2): string {
