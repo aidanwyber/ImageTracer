@@ -1,0 +1,61 @@
+<!doctype html>
+<html lang="en">
+        <head>
+                <meta charset="utf-8" />
+                <meta name="viewport" content="width=device-width, initial-scale=1" />
+                <title>ImageTrace Browser Demo</title>
+        </head>
+        <body>
+                <main class="layout">
+                        <section class="controls">
+                                <h1>ImageTrace Demo</h1>
+                                <p>
+                                        Load the sample image or upload your own, then tweak the sliders to
+                                        regenerate the traced SVG.
+                                </p>
+                                <div class="control-group">
+                                        <label for="image-upload" class="file-label">Upload image…</label>
+                                        <input id="image-upload" type="file" accept="image/*" />
+                                </div>
+                                <div class="control-group">
+                                        <label for="color-step">Color quantisation step: <span id="color-step-value"></span></label>
+                                        <input id="color-step" type="range" min="1" max="64" step="1" value="12" />
+                                </div>
+                                <div class="control-group">
+                                        <label for="path-simplification">Path simplification tolerance: <span id="path-simplification-value"></span></label>
+                                        <input id="path-simplification" type="range" min="0" max="10" step="0.1" value="3" />
+                                </div>
+                                <div class="control-group">
+                                        <label for="curve-fitting">Curve fitting tolerance: <span id="curve-fitting-value"></span></label>
+                                        <input id="curve-fitting" type="range" min="0.1" max="10" step="0.1" value="2" />
+                                </div>
+                                <div class="control-group">
+                                        <label for="min-hull">Minimum hull distance: <span id="min-hull-value"></span></label>
+                                        <input id="min-hull" type="range" min="1" max="20" step="1" value="3" />
+                                </div>
+                                <div class="control-group">
+                                        <label for="pixel-step">Pixel grid step size: <span id="pixel-step-value"></span></label>
+                                        <input id="pixel-step" type="range" min="1" max="10" step="1" value="1" />
+                                </div>
+                                <div class="buttons">
+                                        <button id="trace-button" type="button">Trace image</button>
+                                        <button id="download-button" type="button" disabled>Download SVG</button>
+                                </div>
+                                <p class="status" id="status"></p>
+                                <p class="status" id="palette-info"></p>
+                        </section>
+                        <section class="preview">
+                                <div class="panel">
+                                        <h2>Source image</h2>
+                                        <img id="source-image" alt="Sample" crossorigin="anonymous" />
+                                </div>
+                                <div class="panel">
+                                        <h2>SVG output</h2>
+                                        <div id="svg-output" class="svg-output"></div>
+                                </div>
+                        </section>
+                </main>
+                <canvas id="work-canvas" hidden></canvas>
+                <script type="module" src="./main.js"></script>
+        </body>
+</html>
