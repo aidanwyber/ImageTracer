@@ -5,7 +5,7 @@ import { ImageTrace } from '../src/ImageTrace';
 
 test('correct number of hulls and writes an SVG file', async () => {
 	const size = '1080';
-	// const size = '128';
+
 	const image = await loadImage(`test/test-${size}.png`);
 	const canvas = createCanvas(image.width, image.height);
 	const ctx = canvas.getContext('2d');
