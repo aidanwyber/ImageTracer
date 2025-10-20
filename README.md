@@ -102,6 +102,18 @@ npm test
 
 ## Examples
 
+### Image Conversion Example
+
+Input PNG             |  Output SVG
+:-------------------------:|:-------------------------:
+![Input](test/test-1080.png)  |  ![Output](test/output/test-1080.svg)
+
+The example above shows the conversion from a raster PNG image (left) to a vectorized SVG output (right). Notice how the library:
+- Accurately detects color regions
+- Creates smooth vector paths
+- Preserves the original shapes
+- Maintains crisp edges at any scale
+
 ### Basic Usage
 
 ```typescript
