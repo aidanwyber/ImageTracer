@@ -1,180 +1,186 @@
 :root {
-        color-scheme: light dark;
-        font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-        line-height: 1.5;
-        background-color: #f3f4f6;
-        color: #111827;
+	color-scheme: light dark;
+	font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI',
+		sans-serif;
+	line-height: 1.5;
+	background-color: #f3f4f6;
+	color: #111827;
 }
 
 body {
-        margin: 0;
-        min-height: 100vh;
+	margin: 0;
+	min-height: 100vh;
 }
 
 .layout {
-        display: grid;
-        grid-template-columns: minmax(18rem, 22rem) 1fr;
-        gap: 2rem;
-        padding: 1.5rem;
-        box-sizing: border-box;
+	display: grid;
+	grid-template-columns: minmax(18rem, 22rem) 1fr;
+	gap: 2rem;
+	padding: 1.5rem;
+	box-sizing: border-box;
 }
 
 .controls {
-        background: rgba(255, 255, 255, 0.9);
-        border-radius: 12px;
-        padding: 1.5rem;
-        box-shadow: 0 12px 30px rgba(15, 23, 42, 0.12);
-        display: flex;
-        flex-direction: column;
-        gap: 1rem;
+	background: rgba(255, 255, 255, 0.9);
+	border-radius: 12px;
+	padding: 1.5rem;
+	box-shadow: 0 12px 30px rgba(15, 23, 42, 0.12);
+	display: flex;
+	flex-direction: column;
+	gap: 1rem;
 }
 
 .controls h1 {
-        margin: 0;
-        font-size: 1.8rem;
+	margin: 0;
+	font-size: 1.8rem;
 }
 
 .controls p {
-        margin: 0;
+	margin: 0;
 }
 
 .control-group {
-        display: flex;
-        flex-direction: column;
-        gap: 0.4rem;
+	display: flex;
+	flex-direction: column;
+	gap: 0.4rem;
 }
 
 .control-group label {
-        font-weight: 600;
+	font-weight: 600;
 }
 
 .control-group input[type='range'] {
-        width: 100%;
+	width: 100%;
 }
 
 .file-label {
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        padding: 0.6rem 1rem;
-        border-radius: 8px;
-        border: 1px dashed #4f46e5;
-        color: #4338ca;
-        cursor: pointer;
-        font-weight: 600;
-        transition: background-color 0.2s ease, color 0.2s ease;
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	padding: 0.6rem 1rem;
+	border-radius: 8px;
+	border: 1px dashed #4f46e5;
+	color: #4338ca;
+	cursor: pointer;
+	font-weight: 600;
+	transition: background-color 0.2s ease, color 0.2s ease;
 }
 
 .file-label:hover {
-        background-color: rgba(99, 102, 241, 0.1);
+	background-color: rgba(99, 102, 241, 0.1);
 }
 
 #image-upload {
-        position: absolute;
-        opacity: 0;
-        width: 0;
-        height: 0;
+	position: absolute;
+	opacity: 0;
+	width: 0;
+	height: 0;
 }
 
 .buttons {
-        display: flex;
-        gap: 0.75rem;
+	display: flex;
+	gap: 0.75rem;
 }
 
 button {
-        cursor: pointer;
-        border: none;
-        padding: 0.6rem 1rem;
-        border-radius: 8px;
-        font-size: 0.95rem;
-        font-weight: 600;
-        transition: transform 0.15s ease, box-shadow 0.15s ease, background-color 0.15s ease;
+	cursor: pointer;
+	border: none;
+	padding: 0.6rem 1rem;
+	border-radius: 8px;
+	font-size: 0.95rem;
+	font-weight: 600;
+	transition: transform 0.15s ease, box-shadow 0.15s ease,
+		background-color 0.15s ease;
 }
 
 #trace-button {
-        background: linear-gradient(135deg, #6366f1, #8b5cf6);
-        color: white;
-        box-shadow: 0 10px 20px rgba(99, 102, 241, 0.3);
+	background: linear-gradient(135deg, #6366f1, #8b5cf6);
+	color: white;
+	box-shadow: 0 10px 20px rgba(99, 102, 241, 0.3);
 }
 
 #trace-button:hover {
-        transform: translateY(-1px);
-        box-shadow: 0 14px 28px rgba(99, 102, 241, 0.35);
+	transform: translateY(-1px);
+	box-shadow: 0 14px 28px rgba(99, 102, 241, 0.35);
 }
 
 #download-button {
-        background: #fbbf24;
-        color: #78350f;
-        box-shadow: 0 10px 20px rgba(251, 191, 36, 0.3);
+	background: #fbbf24;
+	color: #78350f;
+	box-shadow: 0 10px 20px rgba(251, 191, 36, 0.3);
 }
 
 #download-button[disabled] {
-        background: #d1d5db;
-        color: #6b7280;
-        box-shadow: none;
-        cursor: not-allowed;
+	background: #d1d5db;
+	color: #6b7280;
+	box-shadow: none;
+	cursor: not-allowed;
 }
 
 .status {
-        min-height: 1.5rem;
-        font-size: 0.9rem;
-        color: #1f2937;
+	min-height: 1.5rem;
+	font-size: 0.9rem;
+	color: #1f2937;
 }
 
 .preview {
-        display: grid;
-        gap: 1.5rem;
+	display: grid;
+	gap: 1.5rem;
 }
 
 .panel {
-        background: rgba(255, 255, 255, 0.85);
-        border-radius: 12px;
-        padding: 1rem;
-        box-shadow: 0 12px 30px rgba(15, 23, 42, 0.12);
-        display: flex;
-        flex-direction: column;
-        gap: 0.75rem;
+	background: rgba(255, 255, 255, 0.85);
+	border-radius: 12px;
+	padding: 1rem;
+	box-shadow: 0 12px 30px rgba(15, 23, 42, 0.12);
+	display: flex;
+	flex-direction: column;
+	gap: 0.75rem;
 }
 
 .panel h2 {
-        margin: 0;
+	margin: 0;
 }
 
 #source-image {
-        max-width: 100%;
-        border-radius: 8px;
-        box-shadow: 0 10px 18px rgba(30, 64, 175, 0.25);
+	/* max-width: 100%; */
+	/* height: 100%; */
+	/* max-height: 50vh; */
+	width: fit-content;
+	max-height: 40vh;
+	border-radius: 8px;
+	box-shadow: 0 10px 18px rgba(30, 64, 175, 0.25);
 }
 
 .svg-output {
-        min-height: 320px;
-        background: repeating-linear-gradient(
-                45deg,
-                rgba(148, 163, 184, 0.18),
-                rgba(148, 163, 184, 0.18) 10px,
-                rgba(148, 163, 184, 0.08) 10px,
-                rgba(148, 163, 184, 0.08) 20px
-        );
-        border-radius: 8px;
-        padding: 1rem;
-        overflow: auto;
+	min-height: 5rem;
+	background: repeating-linear-gradient(
+		45deg,
+		rgba(148, 163, 184, 0.18),
+		rgba(148, 163, 184, 0.18) 10px,
+		rgba(148, 163, 184, 0.08) 10px,
+		rgba(148, 163, 184, 0.08) 20px
+	);
+	border-radius: 8px;
+	padding: 1rem;
+	overflow: auto;
 }
 
 .svg-output svg {
-        width: 100%;
-        height: auto;
-        display: block;
-        background: white;
-        border-radius: 6px;
-        box-shadow: inset 0 0 0 1px rgba(15, 23, 42, 0.08);
+	width: 100%;
+	height: auto;
+	display: block;
+	background: white;
+	border-radius: 6px;
+	box-shadow: inset 0 0 0 1px rgba(15, 23, 42, 0.08);
 }
 
 @media (max-width: 960px) {
-        .layout {
-                grid-template-columns: 1fr;
-        }
+	.layout {
+		grid-template-columns: 1fr;
+	}
 
-        .controls {
-                order: 2;
-        }
+	.controls {
+		order: 2;
+	}
 }
