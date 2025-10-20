@@ -11,10 +11,11 @@ export class ImageTrace {
 	readonly width: number;
 	readonly height: number;
 	readonly curveFittingTolerance: number;
-	readonly pathSimplification: number;
+	readonly pathSimpMinDist: number;
 	readonly pixelGridStepSize: number;
 	readonly validHulls: Hull[];
-	readonly debugPointRadius: number | undefined;
+	readonly minHullDistance: number;
+	readonly debugPointRadius?: number;
 
 	/**
 	 * Creates a new ImageTrace instance
@@ -34,17 +35,20 @@ export class ImageTrace {
 			throw new Error('palette must contain at least one color');
 
 		const {
-			pathSimplification,
+			pathSimplificationTolerance,
 			curveFittingTolerance,
+			minHullDistance = 3,
 			pixelGridStepSize = 1,
 			debugPointRadius,
 		} = options;
 
 		this.width = imageData.width;
 		this.height = imageData.height;
-		this.curveFittingTolerance = curveFittingTolerance;
-		this.pathSimplification = pathSimplification;
-		this.pixelGridStepSize = Math.max(1, Math.floor(pixelGridStepSize));
+		this.curveFittingTolerance =
+			curveFittingTolerance * (Math.max(this.width, this.height) / 1000);
+		this.pathSimpMinDist = Math.max(0, pathSimplificationTolerance);
+		this.pixelGridStepSize = Math.max(1, Math.round(pixelGridStepSize));
+		this.minHullDistance = minHullDistance;
 		this.debugPointRadius = debugPointRadius;
 		this.validHulls = this.createHullsFromPalette(imageData, palette);
 	}
@@ -52,7 +56,7 @@ export class ImageTrace {
 	/**
 	 * Retrieves a hull by its color
 	 */
-	getHullByColor(color: Color): Hull | undefined {
+	getHullsByColor(color: Color): Hull | undefined {
 		return this.validHulls.find(hull =>
 			this.colorsMatch(hull.color, color)
 		);
@@ -110,18 +114,108 @@ export class ImageTrace {
 		palette: Color[]
 	): Hull[] {
 		return palette
-			.map(color => this.createHullForColor(imageData, color))
+			.map(color => this.createHullsForColor(imageData, color))
+			.flat()
 			.filter(hull => hull.isValid);
 	}
 
-	private createHullForColor(imageData: ImageDataLike, color: Color): Hull {
+	private createHullsForColor(
+		imageData: ImageDataLike,
+		color: Color
+	): Hull[] {
 		const maskPoints = this.createMaskPointCloud(imageData, color);
-		return new Hull(
-			color,
-			maskPoints,
-			this.pathSimplification,
-			this.curveFittingTolerance
+		const pointClouds = this.separatePointClouds(maskPoints);
+		return pointClouds.map(
+			pointCloud =>
+				new Hull(
+					color,
+					pointCloud,
+					this.pathSimpMinDist,
+					this.curveFittingTolerance
+				)
 		);
+	}
+
+	private separatePointClouds(points: Vec2[]): Vec2[][] {
+		const clouds: Vec2[][] = [];
+		if (points.length === 0) return clouds;
+
+		// Determine an effective threshold that respects both the configured minimum
+		// hull distance and the sampling grid step size.
+		const threshold = Math.max(0, this.minHullDistance);
+		if (this.pixelGridStepSize > threshold) {
+			throw new Error(
+				'Pixel grid step needs to be smaller than the minimum hull distance.'
+			);
+		}
+
+		// We'll compare squared Euclidean distances for the tight membership test.
+		const thresholdSq = threshold * threshold;
+
+		// Use a spatial hash (grid) to limit neighbor candidate checks.
+		const cellSize = threshold; // one point of distance per cell is sufficient
+		const grid = new Map<string, number[]>();
+		for (let i = 0; i < points.length; i++) {
+			const p = points[i];
+			const cx = Math.floor(p.x / cellSize);
+			const cy = Math.floor(p.y / cellSize);
+			const key = `${cx},${cy}`;
+			// set grid cell (or initialize first)
+			(grid.get(key) ?? grid.set(key, []).get(key)!).push(i);
+		}
+
+		const visited = new Uint8Array(points.length);
+
+		for (let i = 0; i < points.length; i++) {
+			if (visited[i]) continue;
+
+			// Start a new cloud
+			const cloud: Vec2[] = [];
+			const queue: number[] = [];
+			let qi = 0;
+			queue.push(i);
+			visited[i] = 1;
+
+			while (qi < queue.length) {
+				const idx = queue[qi++];
+				const p = points[idx];
+				cloud.push(p);
+
+				// Check neighboring grid cells (only need to check adjacent cells because
+				// cellSize == threshold). This keeps candidate lookups small.
+				const cx = Math.floor(p.x / cellSize);
+				const cy = Math.floor(p.y / cellSize);
+				for (let gx = cx - 1; gx <= cx + 1; gx++) {
+					for (let gy = cy - 1; gy <= cy + 1; gy++) {
+						const key = `${gx},${gy}`;
+						const bucket = grid.get(key);
+						if (!bucket) continue;
+						for (const nbIdx of bucket) {
+							if (visited[nbIdx]) continue;
+							const q = points[nbIdx];
+							const dx = q.x - p.x;
+							const dy = q.y - p.y;
+
+							// Fast reject: use Manhattan distance as a cheap filter
+							// because points are integer grid samples. This avoids one
+							// multiplication for far-away candidates.
+							if (Math.abs(dx) + Math.abs(dy) > threshold * 2)
+								continue;
+
+							// Final check: squared Euclidean distance against threshold^2
+							if (dx * dx + dy * dy <= thresholdSq) {
+								visited[nbIdx] = 1;
+								queue.push(nbIdx);
+							}
+						}
+					}
+				}
+			}
+
+			if (cloud.length) clouds.push(cloud);
+		}
+
+		return clouds;
 	}
 
 	private createMaskPointCloud(

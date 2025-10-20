@@ -8,8 +8,9 @@ export interface ImageDataLike {
 }
 
 export interface ImageTraceOptions {
-	pathSimplification: number;
+	pathSimplificationTolerance: number;
 	curveFittingTolerance: number;
+	minHullDistance?: number;
 	pixelGridStepSize?: number;
 	debugPointRadius?: number;
 }

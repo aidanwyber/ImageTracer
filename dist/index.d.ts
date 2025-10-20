@@ -13,8 +13,9 @@ interface ImageDataLike {
     height: number;
 }
 interface ImageTraceOptions {
-    smoothingMinLength: number;
-    chaikinSmoothingSteps: number;
+    pathSimplificationTolerance: number;
+    curveFittingTolerance: number;
+    minHullDistance?: number;
     pixelGridStepSize?: number;
     debugPointRadius?: number;
 }
@@ -27,15 +28,17 @@ interface SmoothingOptions {
 
 declare class Hull {
     static concavity: number;
-    static lengthThreshold: number;
     readonly color: Color;
-    readonly sampledPoints: Vec2[];
     readonly hullPoints: Vec2[];
-    constructor(color: Color, sampledPoints: Vec2[], smoothingMinLength: number);
+    readonly cubics?: Vec2[][];
+    readonly isValid: boolean;
+    constructor(color: Color, sampledPoints: Vec2[], pathSimplification: number, curveFittingTolerance: number);
     /**
      * Reduces the number of points in a path while maintaining its shape
      */
-    reducePoints(points: Vec2[], minDist: number): Vec2[];
+    reducePoints(points: Vec2[], tolerance: number): Vec2[];
+    getPathData(): string;
+    getPathElem(): string;
 }
 
 /**
@@ -45,11 +48,12 @@ declare class Hull {
 declare class ImageTrace {
     readonly width: number;
     readonly height: number;
-    readonly smoothingMinLength: number;
-    readonly chaikinSmoothingSteps: number;
+    readonly curveFittingTolerance: number;
+    readonly pathSimpMinDist: number;
     readonly pixelGridStepSize: number;
-    readonly hulls: Hull[];
-    readonly debugPointRadius: number | undefined;
+    readonly validHulls: Hull[];
+    readonly minHullDistance: number;
+    readonly debugPointRadius?: number;
     /**
      * Creates a new ImageTrace instance
      *
@@ -62,16 +66,15 @@ declare class ImageTrace {
     /**
      * Retrieves a hull by its color
      */
-    getHullByColor(color: Color): Hull | undefined;
+    getHullsByColor(color: Color): Hull | undefined;
     /**
      * Generates an SVG string representation of the traced image
      */
     getSVGString(): string;
     private createHullsFromPalette;
-    private createHullForColor;
+    private createHullsForColor;
+    private separatePointClouds;
     private createMaskPointCloud;
-    private createPathElement;
-    private createPointElements;
     private pixelMatches;
     private colorsMatch;
 }
