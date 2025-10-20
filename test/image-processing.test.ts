@@ -13,8 +13,8 @@ test('correct number of hulls and writes an SVG file', async () => {
 	const imageData = ctx.getImageData(0, 0, image.width, image.height);
 
 	const palette = [
-		{ r: 255, g: 0, b: 0 },
 		{ r: 0, g: 0, b: 255 },
+		{ r: 255, g: 0, b: 0 },
 	];
 
 	const maxSize = Math.max(image.width, image.height);
@@ -24,7 +24,7 @@ test('correct number of hulls and writes an SVG file', async () => {
 		pathSimplificationTolerance: 3,
 		curveFittingTolerance: 2,
 		minHullDistance: 3,
-		debugPointRadius: 4 * scale,
+		// debugPointRadius: 4 * scale,
 	});
 
 	const bgCol = { r: 230, g: 230, b: 230 };
