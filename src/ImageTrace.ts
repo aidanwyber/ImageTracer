@@ -176,16 +176,18 @@ export class ImageTrace {
 	): Hull[] {
 		const maskPoints = this.createMaskPointCloud(imageData, color);
 		const pointClouds = this.separatePointClouds(maskPoints);
-		return pointClouds.map(
-			pointCloud =>
-				new Hull(
-					color,
-					pointCloud,
-					this.pathSimpMinDist,
-					this.curveFittingTolerance
-				)
-		);
-	}
+                return pointClouds.map(
+                        pointCloud =>
+                                new Hull(
+                                        color,
+                                        pointCloud,
+                                        this.pathSimpMinDist,
+                                        this.curveFittingTolerance,
+                                        this.width,
+                                        this.height
+                                )
+                );
+        }
 
 	private separatePointClouds(points: Vec2[]): Vec2[][] {
 		const clouds: Vec2[][] = [];
