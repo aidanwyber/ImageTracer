@@ -37,11 +37,14 @@ import { Hull } from '../src/Hull';
 
 const COLOR: Color = { r: 255, g: 0, b: 0 };
 const SAMPLE_POINTS: Vec2[] = [
-	{ x: 0, y: 0 },
-	{ x: 2, y: 0 },
-	{ x: 2, y: 2 },
-	{ x: 0, y: 2 },
+        { x: 0, y: 0 },
+        { x: 2, y: 0 },
+        { x: 2, y: 2 },
+        { x: 0, y: 2 },
 ];
+
+const WIDTH = 4;
+const HEIGHT = 4;
 
 describe('Hull', () => {
 	beforeEach(() => {
@@ -53,14 +56,14 @@ describe('Hull', () => {
 		concavemanMock.mockImplementation(points => points);
 		simplifyMock.mockImplementation(points => points);
 		createTangentMock.mockReturnValue([1, 0]);
-		fitCubicMock.mockReturnValue([
-			[
-				[0, 0],
-				[1, 1],
-				[2, 2],
-				[3, 3],
-			],
-		]);
+                fitCubicMock.mockReturnValue([
+                        [
+                                [2, 0],
+                                [1, 1],
+                                [2, 2],
+                                [0, 2],
+                        ],
+                ]);
 	});
 
 	it('marks hulls with fewer than three points as invalid', () => {
@@ -68,7 +71,7 @@ describe('Hull', () => {
 			[0, 0],
 			[1, 1],
 		]);
-		const hull = new Hull(COLOR, SAMPLE_POINTS.slice(0, 2), 1, 1);
+                const hull = new Hull(COLOR, SAMPLE_POINTS.slice(0, 2), 1, 1, WIDTH, HEIGHT);
 
 		expect(hull.isValid).toBe(false);
 		expect(hull.getPathElem()).toBe('');
@@ -76,22 +79,22 @@ describe('Hull', () => {
 	});
 
 	it('generates SVG path data for valid hulls', () => {
-		const hull = new Hull(COLOR, SAMPLE_POINTS, 0.5, 2);
+                const hull = new Hull(COLOR, SAMPLE_POINTS, 0.5, 2, WIDTH, HEIGHT);
 
-		expect(hull.isValid).toBe(true);
-		expect(hull.getPathData()).toBe('M 0 0 C 1 1, 2 2, 3 3 Z');
-		expect(hull.getPathElem()).toBe(
-			'<path fill="rgb(255,0,0)" d="M 0 0 C 1 1, 2 2, 3 3 Z" />\n'
-		);
-		expect(createTangentMock).toHaveBeenCalledTimes(1);
-		expect(fitCubicMock).toHaveBeenCalledTimes(1);
-	});
+                expect(hull.isValid).toBe(true);
+                expect(hull.getPathData()).toBe('M 0 0 L 2 0 C 1 1, 2 2, 0 2 L 0 0 Z');
+                expect(hull.getPathElem()).toBe(
+                        '<path fill="rgb(255,0,0)" d="M 0 0 L 2 0 C 1 1, 2 2, 0 2 L 0 0 Z" />\n'
+                );
+                expect(createTangentMock).toHaveBeenCalledTimes(2);
+                expect(fitCubicMock).toHaveBeenCalledTimes(1);
+        });
 
-	it('delegates point simplification to simplify-js', () => {
-		const hull = new Hull(COLOR, SAMPLE_POINTS, 0.5, 1);
-		simplifyMock.mockClear();
+        it('delegates point simplification to simplify-js', () => {
+                const hull = new Hull(COLOR, SAMPLE_POINTS, 0.5, 1, WIDTH, HEIGHT);
+                simplifyMock.mockClear();
 
-		const arbitraryPoints: Vec2[] = [
+                const arbitraryPoints: Vec2[] = [
 			{ x: 0, y: 0 },
 			{ x: 1, y: 1 },
 			{ x: 2, y: 0 },
@@ -104,7 +107,53 @@ describe('Hull', () => {
 
 		const result = hull.reducePoints(arbitraryPoints, 0.75);
 
-		expect(simplifyMock).toHaveBeenCalledWith(arbitraryPoints, 0.75, true);
-		expect(result).toBe(simplifiedPoints);
-	});
+                expect(simplifyMock).toHaveBeenCalledWith(arbitraryPoints, 0.75, true);
+                expect(result).toEqual(simplifiedPoints);
+        });
+
+        it('preserves boundary points removed during simplification', () => {
+                const hull = new Hull(COLOR, SAMPLE_POINTS, 0.5, 1, WIDTH, HEIGHT);
+                const boundaryRun: Vec2[] = [
+                        { x: 0, y: 0 },
+                        { x: 1, y: 0 },
+                        { x: 2, y: 0 },
+                ];
+
+                simplifyMock.mockReturnValueOnce([{ x: 1, y: 0 }]);
+
+                const result = hull.reducePoints(boundaryRun, 0.25);
+
+                expect(result).toEqual(boundaryRun);
+        });
+
+        it('treats shared-boundary edges as straight path segments', () => {
+                fitCubicMock.mockReturnValueOnce([
+                        [
+                                [2, 0],
+                                [0.5, 0.2],
+                                [2.5, 0.1],
+                                [0, 2],
+                        ],
+                ]);
+
+                const hull = new Hull(COLOR, SAMPLE_POINTS, 0.5, 1, WIDTH, HEIGHT);
+
+                expect(hull.pathSegments).toBeDefined();
+                expect(hull.pathSegments?.[0]).toEqual({
+                        type: 'L',
+                        points: [
+                                { x: 0, y: 0 },
+                                { x: 2, y: 0 },
+                        ],
+                });
+                const lastSegment = hull.pathSegments?.[hull.pathSegments.length - 1];
+                expect(lastSegment).toEqual({
+                        type: 'L',
+                        points: [
+                                { x: 0, y: 2 },
+                                { x: 0, y: 0 },
+                        ],
+                });
+                expect(hull.getPathData()).toBe('M 0 0 L 2 0 C 0.5 0.2, 2.5 0.1, 0 2 L 0 0 Z');
+        });
 });
