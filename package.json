@@ -1,7 +1,7 @@
 {
 	"name": "imagetrace",
-	"version": "1.0.2",
-	"description": "Geometry and physics library for creative coding in JavaScript and TypeScript.",
+	"version": "1.1.0",
+	"description": "A simple TypeScript library for converting raster images to vector graphics.",
 	"keywords": [
 		"geometry",
 		"physics",
@@ -20,20 +20,30 @@
 	"license": "MIT",
 	"author": "Aidan Wyber",
 	"type": "module",
-	"main": "./dist/index.js",
+	"main": "./dist/index.cjs",
+	"module": "./dist/index.js",
 	"types": "./dist/index.d.ts",
+	"exports": {
+		".": {
+			"import": "./dist/index.js",
+			"require": "./dist/index.cjs"
+		}
+	},
 	"directories": {
 		"test": "test"
 	},
 	"files": [
 		"./dist"
 	],
+	"sideEffects": false,
 	"scripts": {
 		"test": "vitest",
 		"build": "tsup src/index.ts --format cjs,esm --dts"
 	},
 	"dependencies": {
-		"concaveman": "^2.0.0"
+		"concaveman": "^2.0.0",
+		"fit-curve": "^0.2.0",
+		"simplify-js": "^1.2.4"
 	},
 	"devDependencies": {
 		"@types/concaveman": "^1.1.6",
@@ -43,6 +53,5 @@
 		"tsup": "^8.5.0",
 		"typescript": "^5.9.3",
 		"vitest": "^3.2.4"
-	},
-	"module": "./dist/index.mjs"
+	}
 }
