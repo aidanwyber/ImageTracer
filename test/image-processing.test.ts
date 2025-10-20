@@ -27,7 +27,8 @@ test('correct number of hulls and writes an SVG file', async () => {
 		debugPointRadius: 4 * scale,
 	});
 
-	const svgString = it.getSVGString();
+	const bgCol = { r: 230, g: 230, b: 230 };
+	const svgString = it.getSVGString(bgCol);
 
 	// create an output directory
 	const outDir = path.join(__dirname, 'output');

@@ -50,14 +50,23 @@ export class ImageTrace {
 		this.pixelGridStepSize = Math.max(1, Math.round(pixelGridStepSize));
 		this.minHullDistance = minHullDistance;
 		this.debugPointRadius = debugPointRadius;
+
+		// remove duplicate colors (preserve first occurrence)
+		const seen = new Set<string>();
+		palette = palette.filter(c => {
+			const key = `${c.r},${c.g},${c.b}`;
+			if (seen.has(key)) return false;
+			seen.add(key);
+			return true;
+		});
 		this.validHulls = this.createHullsFromPalette(imageData, palette);
 	}
 
 	/**
 	 * Retrieves a hull by its color
 	 */
-	getHullsByColor(color: Color): Hull | undefined {
-		return this.validHulls.find(hull =>
+	getHullsByColor(color: Color): Hull[] {
+		return this.validHulls.filter(hull =>
 			this.colorsMatch(hull.color, color)
 		);
 	}
@@ -65,11 +74,20 @@ export class ImageTrace {
 	/**
 	 * Generates an SVG string representation of the traced image
 	 */
-	getSVGString(): string {
+	getSVGString(backgroundColor?: Color): string {
 		const svg: string[] = [
 			`<svg width="${this.width}" height="${this.height}" `,
 			'version="1.1" xmlns="http://www.w3.org/2000/svg">\n',
 		];
+
+		if (backgroundColor !== undefined) {
+			const { r, g, b } = backgroundColor;
+			svg.push(
+				`<rect width="${this.width}" height="${this.height}" ` +
+					`x="0" y="0" fill="rgb(${r},${g},${b})" stroke="none" />`
+			);
+		}
+
 		for (const hull of this.validHulls) {
 			svg.push(hull.getPathElem());
 
