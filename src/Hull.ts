@@ -89,10 +89,32 @@ export class Hull {
         reducePoints(points: Vec2[], tolerance: number): Vec2[] {
                 const simplified = simplify(points, tolerance, true);
                 const simplifiedKeys = new Set(simplified.map(pt => this.pointKey(pt)));
+                const boundaryNeighborKeys = new Set<string>();
+
+                for (let i = 0; i < points.length; i++) {
+                        if (!this.isBoundaryPoint(points[i])) continue;
+
+                        const prev = points[(i - 1 + points.length) % points.length];
+                        const next = points[(i + 1) % points.length];
+
+                        if (!this.isBoundaryPoint(prev)) {
+                                boundaryNeighborKeys.add(this.pointKey(prev));
+                        }
+
+                        if (!this.isBoundaryPoint(next)) {
+                                boundaryNeighborKeys.add(this.pointKey(next));
+                        }
+                }
+
                 const preserved: Vec2[] = [];
 
                 for (const pt of points) {
-                        if (simplifiedKeys.has(this.pointKey(pt)) || this.isBoundaryPoint(pt)) {
+                        const key = this.pointKey(pt);
+                        if (
+                                simplifiedKeys.has(key) ||
+                                this.isBoundaryPoint(pt) ||
+                                boundaryNeighborKeys.has(key)
+                        ) {
                                 const last = preserved[preserved.length - 1];
                                 if (!last || !this.samePoint(last, pt)) {
                                         preserved.push(pt);

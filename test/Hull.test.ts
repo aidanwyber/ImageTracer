@@ -105,10 +105,14 @@ describe('Hull', () => {
 		];
 		simplifyMock.mockReturnValueOnce(simplifiedPoints);
 
-		const result = hull.reducePoints(arbitraryPoints, 0.75);
+                const result = hull.reducePoints(arbitraryPoints, 0.75);
 
                 expect(simplifyMock).toHaveBeenCalledWith(arbitraryPoints, 0.75, true);
-                expect(result).toEqual(simplifiedPoints);
+                expect(result).toEqual([
+                        { x: 0, y: 0 },
+                        { x: 1, y: 1 },
+                        { x: 2, y: 0 },
+                ]);
         });
 
         it('preserves boundary points removed during simplification', () => {
@@ -212,5 +216,44 @@ describe('Hull', () => {
                                 { x: 0, y: 2 },
                         ],
                 });
+        });
+
+        it('restores neighbors next to boundary cusps for curve fitting', () => {
+                const concavePoints: Vec2[] = [
+                        { x: 0, y: 0 },
+                        { x: 4, y: 0 },
+                        { x: 3.5, y: 0.75 },
+                        { x: 2, y: 2.5 },
+                        { x: 0, y: 4 },
+                ];
+
+                concavemanMock.mockReturnValueOnce(concavePoints.map(({ x, y }) => [x, y]));
+                simplifyMock.mockImplementationOnce(() => [
+                        concavePoints[0],
+                        concavePoints[1],
+                        concavePoints[3],
+                        concavePoints[4],
+                ]);
+
+                const hull = new Hull(COLOR, concavePoints, 0.5, 1, WIDTH, HEIGHT);
+
+                expect(hull.hullPoints).toContainEqual(concavePoints[2]);
+                expect(hull.pathSegments?.[0]).toEqual({
+                        type: 'L',
+                        points: [
+                                { x: 0, y: 0 },
+                                { x: 4, y: 0 },
+                        ],
+                });
+
+                const curveCall = fitCubicMock.mock.calls[0]?.[0];
+                expect(curveCall).toEqual([
+                        [4, 0],
+                        [3.5, 0.75],
+                        [2, 2.5],
+                        [0, 4],
+                ]);
+
+                expect(hull.pathSegments?.[1]?.type).toBe('C');
         });
 });
