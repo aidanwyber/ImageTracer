@@ -6,6 +6,8 @@ A simple TypeScript library for converting raster images to vector graphics, giv
 ![License](https://img.shields.io/badge/license-MIT-green.svg)
 ![TypeScript](https://img.shields.io/badge/TypeScript-5.9+-blue.svg)
 
+npm: https://www.npmjs.com/package/imagetrace
+
 ## Features
 
 -   🔄 Raster to vector conversion
