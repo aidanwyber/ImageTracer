@@ -39,13 +39,13 @@
 		"./dist"
 	],
 	"sideEffects": false,
-        "scripts": {
-                "test": "vitest",
-                "build": "tsup src/index.ts --format cjs,esm --dts",
-                "demo:dev": "vite --config demo/vite.config.ts",
-                "demo:build": "vite build --config demo/vite.config.ts",
-                "demo:preview": "vite preview --config demo/vite.config.ts"
-        },
+	"scripts": {
+		"test": "vitest",
+		"build": "tsup src/index.ts --format cjs,esm --dts",
+		"demo:dev": "vite --config demo/vite.config.ts",
+		"demo:build": "vite build --config demo/vite.config.ts",
+		"demo:preview": "vite preview --config demo/vite.config.ts"
+	},
 	"dependencies": {
 		"concaveman": "^2.0.0",
 		"fit-curve": "^0.2.0",
@@ -56,9 +56,9 @@
 		"@types/node": "^24.7.2",
 		"@vitest/ui": "^3.2.4",
 		"canvas": "^3.2.0",
-                "tsup": "^8.5.0",
-                "typescript": "^5.9.3",
-                "vite": "^7.1.10",
-                "vitest": "^3.2.4"
-        }
+		"tsup": "^8.5.0",
+		"typescript": "^5.9.3",
+		"vite": "^7.1.11",
+		"vitest": "^3.2.4"
+	}
 }
