@@ -170,21 +170,70 @@ export class Hull {
                                 continue;
                         }
 
-                        const leftTangent = isClosedRun
-                                ? FitCurve.createTangent(
-                                          vec2Arr(runPoints[1]),
-                                          vec2Arr(runPoints[runPoints.length - 2])
-                                  )
-                                : FitCurve.createTangent(
-                                          vec2Arr(runPoints[1]),
-                                          vec2Arr(runPoints[0])
-                                  );
-                        const rightTangent = isClosedRun
-                                ? leftTangent.map(value => -value) as [number, number]
-                                : FitCurve.createTangent(
-                                          vec2Arr(runPoints[runPoints.length - 2]),
-                                          vec2Arr(runPoints[runPoints.length - 1])
-                                  );
+                        const addLinearSegments = () => {
+                                for (let i = 0; i < runPoints.length - 1; i++) {
+                                        segments.push({
+                                                type: 'L',
+                                                points: [runPoints[i], runPoints[i + 1]],
+                                        });
+                                }
+
+                                if (isClosedRun) {
+                                        segments.push({
+                                                type: 'L',
+                                                points: [
+                                                        runPoints[runPoints.length - 1],
+                                                        runPoints[0],
+                                                ],
+                                        });
+                                }
+                        };
+
+                        const isFiniteTangent = ([x, y]: [number, number]): boolean =>
+                                Number.isFinite(x) && Number.isFinite(y);
+
+                        const lastPointIndex = runPoints.length - 1;
+
+                        const leftTangent = ((): [number, number] => {
+                                if (isClosedRun) {
+                                        const tangent = FitCurve.createTangent(
+                                                vec2Arr(runPoints[1]),
+                                                vec2Arr(runPoints[lastPointIndex])
+                                        );
+
+                                        if (isFiniteTangent(tangent as [number, number])) {
+                                                return tangent as [number, number];
+                                        }
+                                }
+
+                                return FitCurve.createTangent(
+                                        vec2Arr(runPoints[1]),
+                                        vec2Arr(runPoints[0])
+                                );
+                        })();
+
+                        const rightTangent = ((): [number, number] => {
+                                if (isClosedRun) {
+                                        const tangent = leftTangent.map(value => -value) as [
+                                                number,
+                                                number,
+                                        ];
+
+                                        if (isFiniteTangent(tangent)) {
+                                                return tangent;
+                                        }
+                                }
+
+                                return FitCurve.createTangent(
+                                        vec2Arr(runPoints[lastPointIndex - 1]),
+                                        vec2Arr(runPoints[lastPointIndex])
+                                );
+                        })();
+
+                        if (!isFiniteTangent(leftTangent) || !isFiniteTangent(rightTangent)) {
+                                addLinearSegments();
+                                continue;
+                        }
 
                         const fitted = FitCurve.fitCubic(
                                 runPoints.map(vec2Arr),
