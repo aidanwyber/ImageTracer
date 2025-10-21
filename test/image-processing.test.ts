@@ -43,4 +43,5 @@ test('correct number of hulls and writes an SVG file', async () => {
 
 	// expect(it.validHulls.length).toBe(5);
 	expect(contents).toContain('<svg');
+	expect(contents.indexOf('NaN')).toBe(-1);
 });
