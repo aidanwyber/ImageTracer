@@ -1,5 +1,10 @@
-// import { createHullPoints } from './createHull';
-import type { Color, Vec2, ImageDataLike, ImageTraceOptions } from './types';
+import {
+	Color,
+	Vec2,
+	ImageDataLike,
+	ImageTraceOptions,
+	PathSegmentType,
+} from './types';
 import { Hull } from './Hull';
 import { nf } from './util';
 
@@ -92,36 +97,66 @@ export class ImageTrace {
 		for (const hull of this.validHulls) {
 			svg.push(hull.getPathElem());
 
-			if (this.debugPointRadius !== undefined) {
-				for (let point of hull.hullPoints) {
-					svg.push(
-						`<circle cx="${nf(point.x)}" cy="${nf(point.y)}" ` +
-							`r="${
+			if (
+				this.debugPointRadius !== undefined &&
+				hull.pathSegments !== undefined
+			) {
+				const fontSize = Math.round(this.debugPointRadius * 2);
+
+				for (let segment of hull.pathSegments) {
+					if (segment.type === PathSegmentType.Line) {
+						const [start, end] = segment.points;
+						svg.push(
+							`<circle cx="${nf(start.x)}" cy="${nf(
+								start.y
+							)}" r="${
 								this.debugPointRadius
-							}" fill="none" stroke="#000" strokeWeight="${
-								this.debugPointRadius / 5
-							}" />\n`
+							}" fill="#f006" stroke="#f00" />\n`
+						);
+						svg.push(
+							`<circle cx="${nf(end.x)}" cy="${nf(end.y)}" r="${
+								this.debugPointRadius / 3
+							}" fill="#f00" stroke="none" />\n`
+						);
+
+						const mid = {
+							x: start.x / 2 + end.x / 2,
+							y: start.y / 2 + end.y / 2,
+						};
+						svg.push(
+							`<text x="${nf(mid.x)}" y="${nf(
+								mid.y
+							)}" style="font: bold ${fontSize}px sans-serif; fill: #f00">L</text>`
+						);
+						continue;
+					}
+
+					// PathSegmentType.Curve:
+					const [start, c1, c2, end] = segment.points;
+					svg.push(
+						`<circle cx="${nf(start.x)}" cy="${nf(start.y)}" r="${
+							this.debugPointRadius
+						}" fill="#0006" stroke="#000" />\n` +
+							`<circle cx="${nf(c1.x)}" cy="${nf(c1.y)}" r="${
+								this.debugPointRadius / 2
+							}" fill="none" stroke="#000" />\n` +
+							`<circle cx="${nf(c2.x)}" cy="${nf(c2.y)}" r="${
+								this.debugPointRadius / 2
+							}" fill="none" stroke="#000" />\n` +
+							`<circle cx="${nf(end.x)}" cy="${nf(end.y)}" r="${
+								this.debugPointRadius / 3
+							}" fill="#000" stroke="none" />\n`
+					);
+					const mid = {
+						x: start.x / 4 + end.x / 4 + c1.x / 4 + c2.x / 4,
+						y: start.y / 4 + end.y / 4 + c1.y / 4 + c2.y / 4,
+					};
+					svg.push(
+						`<text x="${nf(mid.x)}" y="${nf(
+							mid.y
+						)}" style="font: bold ${fontSize}px sans-serif">C</text>`
 					);
 				}
-
-				if (hull.cubics !== undefined)
-					for (let c of hull.cubics) {
-						svg.push(
-							`<circle cx="${nf(c[0].x)}" cy="${nf(c[0].y)}" r="${
-								this.debugPointRadius
-							}" fill="#000" stroke="none" />\n` +
-								`<circle cx="${nf(c[1].x)}" cy="${nf(
-									c[1].y
-								)}" r="${
-									this.debugPointRadius / 2
-								}" fill="#000" stroke="none" />\n` +
-								`<circle cx="${nf(c[2].x)}" cy="${nf(
-									c[2].y
-								)}" r="${
-									this.debugPointRadius / 2
-								}" fill="#000" stroke="none" />\n`
-						);
-					}
 			}
 		}
 		svg.push('</svg>');
@@ -182,7 +217,9 @@ export class ImageTrace {
 					color,
 					pointCloud,
 					this.pathSimpMinDist,
-					this.curveFittingTolerance
+					this.curveFittingTolerance,
+					this.width,
+					this.height
 				)
 		);
 	}
