@@ -19,24 +19,45 @@ interface ImageTraceOptions {
     pixelGridStepSize?: number;
     debugPointRadius?: number;
 }
-interface SmoothingOptions {
-    isClosed?: boolean;
-    alpha?: number;
-    minLength?: number;
-    chaikinSteps?: number;
+declare enum PathSegmentType {
+    Line = 0,
+    Curve = 1
+}
+type PathSegment = {
+    type: PathSegmentType.Line;
+    points: [Vec2, Vec2];
+} | {
+    type: PathSegmentType.Curve;
+    points: [Vec2, Vec2, Vec2, Vec2];
+};
+declare enum BoundarySide {
+    Top = 0,
+    Bottom = 1,
+    Left = 2,
+    Right = 3
 }
 
 declare class Hull {
+    color: Color;
+    readonly sampledPoints: Vec2[];
+    readonly pathSimplification: number;
+    readonly curveFittingTolerance: number;
+    readonly width: number;
+    readonly height: number;
     static concavity: number;
-    readonly color: Color;
     readonly hullPoints: Vec2[];
-    readonly cubics?: Vec2[][];
+    readonly pathSegments?: PathSegment[];
     readonly isValid: boolean;
-    constructor(color: Color, sampledPoints: Vec2[], pathSimplification: number, curveFittingTolerance: number);
+    constructor(color: Color, sampledPoints: Vec2[], pathSimplification: number, curveFittingTolerance: number, width: number, height: number);
     /**
      * Reduces the number of points in a path while maintaining its shape
      */
     reducePoints(points: Vec2[], tolerance: number): Vec2[];
+    createPathSegments(simplifiedHullPoints: Vec2[]): PathSegment[];
+    private isBoundaryPoint;
+    private getBoundarySides;
+    private putOnSide;
+    private isSamePoint;
     getPathData(): string;
     getPathElem(): string;
 }
@@ -88,4 +109,4 @@ declare class ImageTrace {
 
 declare function createConvexHullPoints(pointCloud: Vec2[]): Vec2[];
 
-export { type Color, Hull, type ImageDataLike, ImageTrace, type ImageTraceOptions, type SmoothingOptions, type Vec2, createConvexHullPoints };
+export { BoundarySide, type Color, Hull, type ImageDataLike, ImageTrace, type ImageTraceOptions, type PathSegment, PathSegmentType, type Vec2, createConvexHullPoints };
