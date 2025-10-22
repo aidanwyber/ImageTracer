@@ -15,9 +15,18 @@ export interface ImageTraceOptions {
 	debugPointRadius?: number;
 }
 
-export interface SmoothingOptions {
-	isClosed?: boolean;
-	alpha?: number;
-	minLength?: number;
-	chaikinSteps?: number;
+export enum PathSegmentType {
+	Line,
+	Curve,
+}
+
+export type PathSegment =
+	| { type: PathSegmentType.Line; points: [Vec2, Vec2] }
+	| { type: PathSegmentType.Curve; points: [Vec2, Vec2, Vec2, Vec2] };
+
+export enum BoundarySide {
+	Top,
+	Bottom,
+	Left,
+	Right,
 }
