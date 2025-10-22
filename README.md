@@ -22,6 +22,7 @@ npm: https://www.npmjs.com/package/imagetrace
 |          Input PNG           |              Output SVG              |
 | :--------------------------: | :----------------------------------: |
 | ![Input](test/test-1080.png) | ![Output](test/output/test-1080.svg) |
+|  ![Input](test/test-13.png)  |  ![Output](test/output/test-13.svg)  |
 
 The example above shows the conversion from a raster PNG image (left) to a vectorized SVG output (right). Notice how the library:
 
