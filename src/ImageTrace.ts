@@ -104,27 +104,25 @@ export class ImageTrace {
 					);
 				}
 
-                                if (hull.pathSegments !== undefined)
-                                        for (let segment of hull.pathSegments) {
-                                                if (segment.type !== 'C') continue;
+				if (hull.pathSegments !== undefined)
+					for (let segment of hull.pathSegments) {
+						if (segment.type !== 'C') continue;
 
-                                                const [start, c1, c2] = segment.points;
-                                                svg.push(
-                                                        `<circle cx="${nf(start.x)}" cy="${nf(start.y)}" r="${
-                                                                this.debugPointRadius
-                                                        }" fill="#000" stroke="none" />\n` +
-                                                                `<circle cx="${nf(c1.x)}" cy="${nf(
-                                                                        c1.y
-                                                                )}" r="${
-                                                                        this.debugPointRadius / 2
-                                                                }" fill="#000" stroke="none" />\n` +
-                                                                `<circle cx="${nf(c2.x)}" cy="${nf(
-                                                                        c2.y
-                                                                )}" r="${
-                                                                        this.debugPointRadius / 2
-                                                                }" fill="#000" stroke="none" />\n`
-                                                );
-                                        }
+						const [start, c1, c2] = segment.points;
+						svg.push(
+							`<circle cx="${nf(start.x)}" cy="${nf(
+								start.y
+							)}" r="${
+								this.debugPointRadius
+							}" fill="#000" stroke="none" />\n` +
+								`<circle cx="${nf(c1.x)}" cy="${nf(c1.y)}" r="${
+									this.debugPointRadius / 2
+								}" fill="#000" stroke="none" />\n` +
+								`<circle cx="${nf(c2.x)}" cy="${nf(c2.y)}" r="${
+									this.debugPointRadius / 2
+								}" fill="#000" stroke="none" />\n`
+						);
+					}
 			}
 		}
 		svg.push('</svg>');
@@ -179,18 +177,18 @@ export class ImageTrace {
 	): Hull[] {
 		const maskPoints = this.createMaskPointCloud(imageData, color);
 		const pointClouds = this.separatePointClouds(maskPoints);
-                return pointClouds.map(
-                        pointCloud =>
-                                new Hull(
-                                        color,
-                                        pointCloud,
-                                        this.pathSimpMinDist,
-                                        this.curveFittingTolerance,
-                                        this.width,
-                                        this.height
-                                )
-                );
-        }
+		return pointClouds.map(
+			pointCloud =>
+				new Hull(
+					color,
+					pointCloud,
+					this.pathSimpMinDist,
+					this.curveFittingTolerance,
+					this.width,
+					this.height
+				)
+		);
+	}
 
 	private separatePointClouds(points: Vec2[]): Vec2[][] {
 		const clouds: Vec2[][] = [];
