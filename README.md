@@ -94,8 +94,8 @@ new ImageTrace(
 
 ### Prerequisites
 
--   Node.js 14+
--   npmnode
+-   Node.js
+-   npm
 
 ### Setup
 
@@ -180,5 +180,5 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ## Roadmap
 
+-   [x] Automatic SVG download
 -   [ ] More detailed smoothing options
--   [ ] Automatic SVG download
